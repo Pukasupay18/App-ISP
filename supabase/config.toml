@@ -1,0 +1,57 @@
+# Cada Edge Function real del proyecto agrega aquí su propio bloque
+# [functions.<nombre>] al crearse con `supabase functions new <nombre>`.
+
+[functions.validar-pin-stand]
+enabled = true
+verify_jwt = false
+import_map = "./functions/validar-pin-stand/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/validar-pin-stand/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/validar-pin-stand/*.html" ]
+
+[functions.marcar-stand]
+enabled = true
+verify_jwt = false
+import_map = "./functions/marcar-stand/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/marcar-stand/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/marcar-stand/*.html" ]
+
+[functions.buscar-empresa-por-ruc]
+enabled = true
+verify_jwt = false
+import_map = "./functions/buscar-empresa-por-ruc/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/buscar-empresa-por-ruc/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/buscar-empresa-por-ruc/*.html" ]
+
+[functions.sincronizar-inscripciones-formulario]
+enabled = true
+verify_jwt = false
+import_map = "./functions/sincronizar-inscripciones-formulario/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/sincronizar-inscripciones-formulario/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/sincronizar-inscripciones-formulario/*.html" ]
+
+[functions.registro-manual]
+enabled = true
+verify_jwt = false
+import_map = "./functions/registro-manual/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/registro-manual/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/registro-manual/*.html" ]

@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    :root {
+      --purple: #96237a;
+      --purple-dark: #6e1a5b;
+      --purple-deep: #4a1240;
+      --purple-tint-04: #fdf3fb;
+      --purple-tint-10: #f6e2f1;
+      --purple-tint-20: #ecc6e2;
+      --ink: #1c1522;
+      --gray: #5f6368;
+      --gray-line: #e4e0e6;
+      --light: #f7f4f7;
+      --card-bg: #ffffff;
+      --btn-secondary-bg: #efe9ee;
+      --text-faint: #a89fa5;
+      --success: #1a9a54;
+      --success-tint: #e3f9ed;
+      --danger: #d5254e;
+      --danger-tint: #fde8ec;
+      --warning: #a65d05;
+      --warning-tint: #fdf0dc;
+      --info: #0369a1;
+      --info-tint: #e0f2fe;
+      --shadow-card: 0 2px 4px rgba(74,18,64,0.05), 0 8px 20px rgba(74,18,64,0.07);
+      --shadow-float: 0 10px 30px rgba(74,18,64,0.18);
+    }
+
+    /* Modo oscuro: por preferencia del sistema, o forzado por el botón de tema (data-theme) */
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --purple: #c24aa3; --purple-dark: #a8348a; --purple-deep: #7a2d66;
+        --purple-tint-04: #241a26; --purple-tint-10: #33232f; --purple-tint-20: #4a2f42;
+        --ink: #f3ecf1; --gray: #b7aebd; --gray-line: #3a2f3d; --light: #14101a;
+        --card-bg: #201a24; --btn-secondary-bg: #2b232f; --text-faint: #8d8492;
+        --success: #3ecf8e; --success-tint: #16302a;
+        --danger: #ef6b8c; --danger-tint: #3a1c26;
+        --warning: #e8ab54; --warning-tint: #3a2c16;
+        --info: #63bdf0; --info-tint: #142a38;
+        --shadow-card: 0 2px 4px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4);
+        --shadow-float: 0 10px 30px rgba(0,0,0,0.55);
+      }
+    }
+    :root[data-theme="dark"] {
+      --purple: #c24aa3; --purple-dark: #a8348a; --purple-deep: #7a2d66;
+      --purple-tint-04: #241a26; --purple-tint-10: #33232f; --purple-tint-20: #4a2f42;
+      --ink: #f3ecf1; --gray: #b7aebd; --gray-line: #3a2f3d; --light: #14101a;
+      --card-bg: #201a24; --btn-secondary-bg: #2b232f; --text-faint: #8d8492;
+      --success: #3ecf8e; --success-tint: #16302a;
+      --danger: #ef6b8c; --danger-tint: #3a1c26;
+      --warning: #e8ab54; --warning-tint: #3a2c16;
+      --info: #63bdf0; --info-tint: #142a38;
+      --shadow-card: 0 2px 4px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.4);
+      --shadow-float: 0 10px 30px rgba(0,0,0,0.55);
+    }
+
+    /* El logo es un PNG con fondo transparente — en modo oscuro casi
+       desaparece contra el fondo. Se le pone un contenedor blanco redondeado
+       SOLO en oscuro; en claro sigue igual que siempre, sin contenedor. */
+    .logo-wrap { display: inline-block; margin-bottom: 18px; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .logo-wrap { background: #ffffff; border-radius: 16px; padding: 14px 20px; }
+    }
+    :root[data-theme="dark"] .logo-wrap { background: #ffffff; border-radius: 16px; padding: 14px 20px; }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--light);
+      background-image: radial-gradient(circle at 15% 0%, var(--purple-tint-04) 0%, var(--light) 45%);
+      margin: 0; padding: 16px; color: var(--ink);
+      -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app-container { width: 100%; max-width: 480px; margin: auto; }
+    /* El panel MKT se usa también en laptop/tablet en la mesa de control del
+       evento (no solo celular en puerta) — se ensancha en pantallas grandes;
+       el resto de las pantallas (asistente, stand) se quedan mobile-first
+       porque viven siempre en un teléfono. Ver toggle de la clase wide-mkt en
+       irA(). */
+    @media (min-width: 860px) {
+      .app-container.wide-mkt { max-width: 760px; }
+      .app-container.wide-mkt .mkt-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); }
+      .app-container.wide-mkt .mkt-cols { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; align-items: start; }
+    }
+    .card { background: var(--card-bg); border-radius: 16px; padding: 22px; box-shadow: var(--shadow-card); margin-bottom: 16px; transition: background .2s ease; }
+    .card-flat { box-shadow: none; border: 1px solid var(--gray-line); }
+    .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.02em; color: var(--purple); margin: 0 0 6px 0; text-transform: uppercase; }
+    .helptext { color: var(--gray); font-size: 13.5px; line-height: 1.55; margin: 0; }
+
+    .btn { width: 100%; height: 58px; border-radius: 29px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px; transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease; font-family: inherit; }
+    .btn:active { transform: scale(0.97); opacity: 0.92; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .btn-main { background: linear-gradient(135deg, var(--purple), var(--purple-dark)); color: white; box-shadow: 0 8px 20px -8px rgba(150,35,122,0.5); }
+    .btn-outline { background: var(--purple-tint-10); color: var(--ink); border: none; }
+    .btn-danger { background: var(--danger-tint); color: var(--danger); }
+    .btn-secondary { background: var(--btn-secondary-bg); color: var(--ink); }
+    .btn-dark { background: var(--purple-deep); color: white; }
+    .footer-button { position: fixed; bottom: 20px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background-color: var(--card-bg); color: var(--purple); border: 1px solid var(--gray-line); box-shadow: var(--shadow-card); cursor: pointer; z-index: 100; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; }
+
+    .theme-toggle { position: fixed; top: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: var(--card-bg); color: var(--purple); border: 1px solid var(--gray-line); box-shadow: var(--shadow-card); cursor: pointer; z-index: 3500; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: background .2s ease, transform .15s ease; }
+    .theme-toggle:active { transform: scale(0.9) rotate(-10deg); }
+
+    /* ==============================================
+       🎨 SISTEMA DE ICONOS Y COMPONENTES (rediseño 2026)
+       Lenguaje visual portado 1:1 desde el prototipo de referencia del
+       usuario (Lovable) — iconos Lucide en vez de emoji en toda la
+       interfaz "de chrome" (botones, títulos, badges de estado). Los
+       emoji quedan solo dentro del texto de los toasts (✅❌⚠️), que es
+       copy, no iconografía de interfaz.
+       ============================================== */
+    .icon { display: inline-block; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; }
+    .icon-sm { width: 15px; height: 15px; }
+    .icon-md { width: 18px; height: 18px; }
+    .icon-lg { width: 22px; height: 22px; }
+
+    /* Badge/pill de estado (p.ej. "EN LÍNEA", "EN VIVO") */
+    .badge-pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
+    .badge-pill .icon { width: 11px; height: 11px; }
+    .badge-success { background: var(--success-tint); color: var(--success); }
+    .badge-live { background: var(--purple-tint-10); color: var(--purple-dark); }
+    .badge-live .dot-pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); animation: pulse-dot 1.4s ease-in-out infinite; }
+
+    /* Círculo numerado del ranking por stand */
+    .rank-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--purple-tint-10); color: var(--purple-dark); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+
+    /* Credencial con gradiente (pantalla de progreso del asistente) */
+    .credential-card { position: relative; overflow: hidden; border-radius: 18px; padding: 20px; background: linear-gradient(135deg, var(--purple-deep), var(--purple-dark)); color: white; margin-bottom: 16px; }
+    .credential-card::after { content: ""; position: absolute; top: -40px; right: -40px; width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,0.08); }
+    .credential-eyebrow { position: relative; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(255,255,255,0.75); margin: 0 0 4px 0; }
+    .credential-nombre { position: relative; font-size: 20px; font-weight: 700; margin: 0; line-height: 1.25; }
+    .credential-empresa { position: relative; font-size: 13px; opacity: 0.88; margin: 3px 0 0 0; }
+
+    /* Banner de alerta (p.ej. "Faltan stands") */
+    .alert-banner { display: flex; align-items: flex-start; gap: 10px; padding: 13px 15px; border-radius: 14px; background: var(--warning-tint); color: var(--warning); margin-bottom: 16px; }
+    .alert-banner .icon { margin-top: 1px; }
+    .alert-banner strong { display: block; font-size: 13.5px; font-weight: 700; margin-bottom: 2px; }
+    .alert-banner span { font-size: 12.5px; line-height: 1.4; opacity: 0.9; }
+    .alert-banner.alert-success { background: var(--success-tint); color: var(--success); }
+
+    /* Fila de checklist con icono de estado (completado/pendiente) */
+    .check-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--gray-line); }
+    .check-row:last-child { border-bottom: none; }
+    .check-row .icon-status { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .check-row .icon-status.done { background: var(--success-tint); color: var(--success); }
+    .check-row .icon-status.pending { background: var(--btn-secondary-bg); color: var(--text-faint); }
+    .check-row .check-nombre { flex-grow: 1; font-size: 14px; font-weight: 500; }
+    .check-row .check-estado { font-size: 11px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; }
+    .check-row .check-estado.done { color: var(--success); }
+    .check-row .check-estado.pending { color: var(--text-faint); }
+
+    /* Visor de cámara estilo "viewfinder", esquinas marcadas en vez de borde sólido */
+    .viewfinder { position: relative; width: 100%; background: #000; border-radius: 18px; overflow: hidden; min-height: 300px; display: flex; align-items: center; justify-content: center; }
+    .viewfinder-corner { position: absolute; width: 34px; height: 34px; border: 3px solid var(--purple); }
+    .viewfinder-corner.tl { top: 14px; left: 14px; border-right: none; border-bottom: none; border-top-left-radius: 10px; }
+    .viewfinder-corner.tr { top: 14px; right: 14px; border-left: none; border-bottom: none; border-top-right-radius: 10px; }
+    .viewfinder-corner.bl { bottom: 14px; left: 14px; border-right: none; border-top: none; border-bottom-left-radius: 10px; }
+    .viewfinder-corner.br { bottom: 14px; right: 14px; border-left: none; border-top: none; border-bottom-right-radius: 10px; }
+
+    /* Toasts: non-blocking feedback replacing alert() for fast, uninterrupted scanning */
+    #toast-container { position: fixed; top: 16px; left: 0; right: 0; z-index: 4000; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; padding: 0 16px; }
+    .toast {
+      max-width: 460px; width: 100%; display: flex; align-items: center; gap: 10px;
+      background: var(--ink); color: white; border-radius: 14px; padding: 14px 16px;
+      font-size: 14.5px; font-weight: 600; line-height: 1.35; box-shadow: var(--shadow-float);
+      opacity: 0; transform: translateY(-16px) scale(0.98);
+      transition: opacity 0.22s cubic-bezier(0.16,1,0.3,1), transform 0.22s cubic-bezier(0.16,1,0.3,1);
+    }
+    .toast-show { opacity: 1; transform: translateY(0) scale(1); }
+    .toast-icon { font-size: 18px; flex-shrink: 0; line-height: 1; }
+    .toast-success { background: var(--success); }
+    .toast-danger { background: var(--danger); }
+    .toast-warning { background: #8a5a10; }
+    .toast-info { background: var(--purple-deep); }
+
+    @keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* =======================================================================
+   CONFIGURACIÓN DE IMPRESIÓN ESTRICTA (Brother QL-820NWB - 29x90mm)
+   ======================================================================= */
+@page {
+    size: 90mm 29mm;
+    margin: 0;
+}
+
+/* Contenedor Base de la Credencial (Espejo de P-touch) */
+.etiqueta-print-box {
+    display: none;
+    font-family: 'Poppins', sans-serif;
+    width: 90mm;
+    height: 29mm;
+    position: relative;
+    background-color: #ffffff;
+    padding: 3mm 4mm;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Texto Superior: ASISTENTE (6.3pt Regular) */
+.rol-tag {
+    font-size: 7pt;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #000000;
+    display: block;
+    margin-top: 0;
+    margin-bottom: 0; /* Quitamos margen extra para pegar el nombre hacia arriba */
+}
+
+/* Caja de Nombre */
+.nombre-container {
+    width: 40mm; 
+    height: 13mm; /* Altura controlada para máximo 2 o 3 líneas */
+    overflow: hidden;
+    display: block;
+}
+
+/* Nombres y Apellidos (11pt Bold) */
+.nombre-texto {
+    margin: 0; /* CRÍTICO: Quita el empuje invisible por defecto del <h1> */
+    padding: 0;
+    font-size: 12.5pt;
+    font-weight: 700;
+    line-height: 1; /* Reduce el espacio entre líneas si el nombre es largo */
+    color: #000000;
+    word-wrap: break-word;
+}
+
+/* Nuevo contenedor para controlar el espacio de la empresa */
+.empresa-wrapper {
+    position: absolute;
+    bottom: 4mm; /* Alineación perfecta con la base del QR */
+    left: 4mm;
+    width: 34mm; 
+    height: 6.5mm; 
+    display: block;
+}
+
+/* Código QR Fijo (1.1cm x 1.1cm) */
+.qr-container {
+    position: absolute;
+    bottom: 4mm; /* Zona segura inferior */
+    right: 5mm;    /* Empujado hacia adentro para esquivar el corte derecho */
+    top: 3mm; /* Zona segura superior */
+    width: 22mm;
+    height: 22mm;
+    display: block;
+}
+
+.qr-container img, .qr-container canvas {
+    width: 22mm !important;
+    height: 22mm !important;
+}
+
+/* Diseño de la etiqueta en vista previa */
+    .etiqueta-print-box {
+        display: block; /* CRÍTICO: Debe ser block para que el QR se dibuje */
+        font-family: 'Poppins', sans-serif;
+        width: 90mm;
+        height: 29mm;
+        position: relative;
+        background-color: #ffffff;
+        padding: 4mm 4mm;
+        overflow: hidden;
+        box-sizing: border-box;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* Sombra para resaltar en pantalla */
+        border: 1px solid #e2e8f0;
+    }
+
+    /* ... mantén tus reglas de .rol-tag, .nombre-texto, etc ... */
+
+    /* =========================================================
+       IMPRESIÓN SIN HOJAS EXTRA
+       ========================================================= */
+@media print {
+        /* 1. Definimos la página y forzamos el corte a 29mm */
+        @page {
+            size: 90mm 29mm;
+            margin: 0;
+        }
+
+        html, body {
+            width: 90mm !important;
+            height: 29mm !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background-color: white !important;
+        }
+
+        /* 2. Ocultamos TODO visualmente */
+        body * {
+            visibility: hidden !important;
+        }
+        
+        /* 3. Hacemos visible ÚNICAMENTE la etiqueta y su contenido interno */
+        #etiquetaImpresion, #etiquetaImpresion * {
+            visibility: visible !important;
+        }
+        
+        /* 4. EL TRUCO FIXED: Ignora los contenedores invisibles y se pega al papel */
+        #etiquetaImpresion {
+            position: fixed !important; /* CRÍTICO: Cambiado a fixed */
+            left: 0 !important;
+            top: 0 !important;
+            margin: 0 !important;
+            padding: 3mm 4.25mm !important; /* Mantenemos el respiro interior */
+            box-shadow: none !important; 
+            border: none !important;
+        }
+    }
+
+main {
+  padding-bottom: 60px; /* Espacio para que no tape el contenido */
+}
+
+    .screen { display: none; }
+    .screen.active { display: block; animation: screen-in 0.22s cubic-bezier(0.16,1,0.3,1); }
+    @keyframes screen-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    .modal { display: none; position: fixed; inset: 0; background: var(--light); z-index: 1000; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+    input { width: 100%; height: 56px; border: 1.5px solid var(--gray-line); border-radius: 12px; padding: 0 16px; margin-bottom: 14px; font-size: 16px; font-family: inherit; box-sizing: border-box; background: var(--card-bg); color: var(--ink); transition: border-color 0.15s ease, background .2s ease; }
+    input:focus { outline: none; border-color: var(--purple); }
+    input::placeholder { color: var(--gray); opacity: 0.8; }
+    input[type="checkbox"] { width: 18px; height: 18px; padding: 0; margin: 0; border-radius: 4px; flex-shrink: 0; accent-color: var(--purple); }
+
+    .scan-hint { display: flex; align-items: center; gap: 8px; background: var(--purple-tint-04); color: var(--purple-dark); border-radius: 12px; padding: 12px 14px; font-size: 13px; font-weight: 500; line-height: 1.4; margin-bottom: 14px; }
+    .scan-hint .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--purple); flex-shrink: 0; animation: pulse-dot 1.4s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    .list-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--gray-line); font-size: 14px; }
+    .list-item:last-child { border-bottom: none; }
+    .scan-alert { display: none; align-items: center; gap: 10px; padding: 15px 16px; border-radius: 14px; text-align: left; font-weight: 700; font-size: 15px; margin-bottom: 15px; line-height: 1.35; }
+
+    /* Carrusel de publicidad de marca: rotación automática, sin dependencias externas */
+    .ad-carousel { position: relative; width: 100%; aspect-ratio: 3 / 1; border-radius: 16px; overflow: hidden; margin-bottom: 16px; background: var(--purple-tint-10); box-shadow: var(--shadow-card); cursor: grab; touch-action: pan-y; user-select: none; }
+    .ad-carousel:active { cursor: grabbing; }
+    .ad-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.5s ease; }
+    .ad-slide.ad-slide-active { opacity: 1; }
+    .ad-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .ad-slide a { display: block; width: 100%; height: 100%; }
+    .ad-eyebrow { position: absolute; top: 8px; left: 10px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(255,255,255,0.85); background: rgba(28,21,34,0.35); padding: 3px 8px; border-radius: 20px; z-index: 2; }
+    .ad-dots { position: absolute; bottom: 8px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; z-index: 2; }
+    .ad-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); transform: scale(1); transition: background 0.2s ease, transform 0.2s ease; }
+    .ad-dot.ad-dot-active { background: white; transform: scale(1.4); }
+
+    /* Tiles de selección de stand (login de marcas y apoyo MKT sin PIN) */
+    .stand-tile { width:100%; display:flex; align-items:center; justify-content:space-between; background:var(--card-bg); border:1.5px solid var(--gray-line); border-radius:14px; padding:14px 16px; margin-bottom:10px; font-weight:600; font-size:14.5px; color:var(--ink); cursor:pointer; transition: border-color .15s ease, background .15s ease, transform .15s ease; font-family:inherit; }
+    .stand-tile:active { transform: scale(0.98); }
+    .stand-tile.stand-tile-active { border-color: var(--purple); background: var(--purple-tint-04); color: var(--purple-deep); }
+    .stand-tile .chev { color: var(--purple); font-size:18px; }
+
+    /* Anillo de progreso circular (avance de stands del asistente) */
+    .progress-ring-wrap { position:relative; width:168px; height:168px; margin:4px auto 0 auto; }
+    .progress-ring { width:100%; height:100%; transform: rotate(-90deg); }
+    .progress-ring-track { fill:none; stroke:var(--gray-line); stroke-width:11; }
+    .progress-ring-fill { fill:none; stroke:var(--purple); stroke-width:11; stroke-linecap:round; stroke-dasharray:377; stroke-dashoffset:377; transition: stroke-dashoffset 0.9s cubic-bezier(0.16,1,0.3,1), stroke 0.4s ease, filter 0.4s ease; }
+    /* Brillo de celebración solo cuando el asistente completó el recorrido —
+       atado a un estado real (apto al sorteo), no decoración de fondo. */
+    .progress-ring-fill.apto { filter: drop-shadow(0 0 6px var(--success)) drop-shadow(0 0 14px var(--success)); }
+    .progress-ring-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+
+    /* Barra de ranking: la animación de "llenado" usa transform (compositor), no width,
+       para no forzar layout/reflow en cada refresh del dashboard. */
+    .rank-bar-track { width:100%; background:var(--gray-line); border-radius:6px; height:8px; overflow:hidden; }
+    .rank-bar-fill { width:100%; height:100%; border-radius:6px; background:var(--purple); transform:scaleX(0); transform-origin:left; transition: transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+  </style>
+</head>
+<body>
+<!--
+THESIS: Operate-mode event-day tool where speed and legibility ARE the polish — a
+rounded-pill, soft-shadow control-panel language borrowed 1:1 from the user's own
+externally-commissioned reference (Lovable prototype), refusing both the emoji-and-
+solid-border look of the prior build and any decorative flourish that would slow a
+staffer mid-scan-queue at the door.
+OWN-WORLD: Same Fiberlux magenta (#96237a family) the reference reused verbatim —
+white/near-black cards on a barely-tinted lavender page, Lucide-style 2px-stroke line
+icons replacing every chrome emoji, pill buttons (radius 29px/height 58px, unchanged
+from the prior build) with a soft primary-tinted shadow instead of a flat drop shadow,
+numbered ranking circles, credential/stat cards carrying the brand gradient, and a
+camera-viewfinder scanner box with corner brackets instead of a plain bordered box.
+STORY: Each of the four roles (attendee, stand rep, MKT staff, first-time visitor)
+opens the app, recognizes their action in one glance, and completes it without the
+interface fighting the next scan.
+FIRST VIEWPORT: Selector screen — logo card, then the "Módulo de Asistencia" card
+with its two stacked pill CTAs (solid primary / outline), sponsor carousel below,
+theme toggle top-right, exactly as the reference's home route composes it.
+FORM: Adopted catalog world (pinned reference, not rolled) — Lovable prototype at
+https://lovable.dev/preview/Ybf036PnBt6JqfvknJ97fbFVcXDHuOUE, extracted via live
+DOM/computed-style inspection (colors, radii, shadows, Lucide icon set) rather than
+concept-seed invention, per new-work.md's pinned-direction rule.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish
+review, the verdict, and DESIGN.md.
+-->
+
+<div id="toast-container" aria-live="polite"></div>
+
+<button id="boton-tema" class="theme-toggle" onclick="alternarTema()" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema claro/oscuro">
+  <svg id="icono-luna" class="icon icon-md" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+  <svg id="icono-sol" class="icon icon-md" viewBox="0 0 24 24" style="display:none;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+</button>
+
+<div class="app-container">
+
+  <div id="screen-selector" class="screen active">
+    <div class="card" style="text-align:center; margin-top: 24px;">
+
+      <div class="logo-wrap">
+        <img src="https://huancayo.isp.fiberlux.pe/wp-content/uploads/2026/08/Logo-Encuentros-07.png" alt="Logo ISP 2026" style="width: 100%; max-width: 240px; height: auto; display:block;">
+      </div>
+
+      <h2 style="color: var(--purple-deep); margin:0 0 8px 0; font-weight:700; font-size:22px;">Módulo de Asistencia</h2>
+      <p style="color:var(--gray); margin:0; font-size:14px;">Selecciona tu perfil de acceso</p>
+    </div>
+    <div class="card">
+      <p class="eyebrow" style="margin-bottom:4px;">Asistente</p>
+      <p class="helptext" style="margin-bottom:14px;">Si eres asistente al evento, ingresa aquí para ver tu progreso.</p>
+      <button class="btn btn-main" onclick="irA('screen-asistente')"><svg class="icon icon-md" viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg> MÓDULO ASISTENTES</button>
+      <div style="height:1px; background:var(--gray-line); margin:20px 0;"></div>
+      <p class="eyebrow" style="margin-bottom:4px;">Marca aliada</p>
+      <p class="helptext" style="margin-bottom:14px;">Si representas un stand, ingresa aquí con tu PIN de acceso.</p>
+      <button class="btn btn-outline" onclick="irA('screen-login-stand')"><svg class="icon icon-md" viewBox="0 0 24 24"><path d="M10 12h4"/><path d="M10 8h4"/><path d="M14 21v-3a2 2 0 0 0-4 0v3"/><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/></svg> CONTROL DE STANDS</button>
+    </div>
+
+    <div class="ad-carousel" id="ad-carousel-home"></div>
+
+    <button class="footer-button" onclick="entrarPanelMKT()">MKT</button>
+<footer style="text-align: center; padding: 24px 10px 30px 10px; margin-top: 10px;">
+  <p style="color: var(--gray); font-size: 11px; padding: 0px 60px; margin: 0; font-weight: 500; letter-spacing: 0.02em;">
+    Plataforma creada por el equipo de Marketing de Fiberlux
+  </p>
+  <p style="color: var(--text-faint); font-size: 10px; margin: 4px 0 0 0;">
+    Conectividad y Soluciones TI
+  </p>
+</footer>
+  </div>
+
+  <div id="screen-asistente" class="screen">
+    <div class="card" style="text-align:center; background: linear-gradient(135deg, var(--purple-deep), var(--purple-dark)); color:white;">
+      <h3 style="margin:0; font-weight:700;">Asistencias y Sorteo</h3>
+    </div>
+    <div class="card">
+      <div id="status-display" style="display:none; align-items:center; gap:10px; padding:12px 14px; margin-bottom:14px; color:var(--purple-dark); background:var(--purple-tint-04); border-radius:12px; font-weight:600; font-size:14px;">Procesando...</div>
+      <p class="helptext" style="margin-bottom:16px;">Escanea tu propio código QR para ver qué marcas ya visitaste.</p>
+      <button class="btn" style="background: var(--purple-tint-10); color: var(--purple-deep);" onclick="abrirModalCamara('reader-general', consultarProgresoAsistente)"><svg class="icon icon-md" viewBox="0 0 24 24"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg> VER MI PROGRESO</button>
+      <button class="btn btn-secondary" onclick="irA('screen-selector')"><svg class="icon icon-md" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> VOLVER</button>
+    </div>
+  </div>
+
+  <div id="screen-login-stand" class="screen">
+    <div class="card">
+      <h3 style="margin-top:0; margin-bottom:6px; color: var(--purple-deep); font-weight:700;">Acceso Marcas Aliadas</h3>
+      <p class="helptext" style="margin-bottom:16px;">Toca el nombre de tu stand y escribe el PIN que te proporcionó el equipo de Marketing de Fiberlux.</p>
+      <div id="lista-stands-tiles"></div>
+    </div>
+
+    <div class="card" id="panel-pin-stand" style="display:none;">
+      <p class="eyebrow" style="margin-bottom:4px;">Ingresando a</p>
+      <h4 id="stand-seleccionado-nombre" style="margin:0 0 16px 0; color:var(--purple-deep); font-size:17px;">—</h4>
+      <input type="password" id="pin-input" pattern="[0-8]*" inputmode="numeric" placeholder="PIN de 6 dígitos" maxlength="6" style="text-align:center; font-size:24px; letter-spacing: 4px; font-weight:600; margin-bottom: 16px;">
+      <button class="btn btn-main" onclick="validarPinStand(this)">INGRESAR</button>
+      <button class="btn btn-secondary" onclick="cerrarPanelPinStand()">CAMBIAR STAND</button>
+    </div>
+
+    <button class="btn btn-secondary" onclick="irA('screen-selector')">CANCELAR</button>
+  </div>
+
+  <div id="screen-stand-scan" class="screen">
+    <div class="card" style="text-align:center; background: linear-gradient(135deg, var(--purple-deep), var(--purple-dark)); color:white; margin-bottom:12px;">
+      <p class="eyebrow" style="color:var(--purple-tint-20); margin-bottom:4px;">Escaneando para</p>
+      <h3 id="stand-title" style="margin:0 0 10px 0; font-size:19px; font-weight:700;">STAND...</h3>
+      <span class="badge-pill" style="background:rgba(255,255,255,0.16); color:#fff;"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>En línea</span>
+    </div>
+    <div class="card">
+      <div id="stand-alert" class="scan-alert"></div>
+      <div class="scan-hint"><span class="dot"></span>Apunta la cámara al QR de la credencial. Acércate lo suficiente para que ocupe el recuadro.</div>
+      <div class="viewfinder">
+        <div id="reader-stand" style="width:100%;"></div>
+        <div class="viewfinder-corner tl"></div>
+        <div class="viewfinder-corner tr"></div>
+        <div class="viewfinder-corner bl"></div>
+        <div class="viewfinder-corner br"></div>
+      </div>
+      <button class="btn btn-danger" style="margin-top:20px;" onclick="salirDeStand()"><svg class="icon icon-md" viewBox="0 0 24 24"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg> CERRAR SESIÓN</button>
+    </div>
+  </div>
+
+  <div id="screen-login-mkt" class="screen">
+    <div class="card" style="text-align:center;">
+      <h3 style="margin-top:0; margin-bottom:16px; color: var(--purple-deep); font-weight:700;">Panel de Control Interno</h3>
+      <input type="password" id="pass-mkt" placeholder="Contraseña" style="text-align:center; font-size:18px;">
+      <button class="btn btn-main" onclick="validarLoginMKT(this)">ACCEDER AL DASHBOARD</button>
+      <button class="btn btn-secondary" onclick="irA('screen-selector')">CANCELAR</button>
+    </div>
+  </div>
+
+  <div id="screen-mkt-stands" class="screen">
+    <div class="card" style="background: linear-gradient(135deg, var(--purple-deep), var(--purple-dark)); color:white; text-align:center;">
+      <p class="eyebrow" style="color:var(--purple-tint-20); margin-bottom:2px;">Apoyo sin PIN</p>
+      <h3 style="margin:0; font-weight:700;">Elige el Stand a Apoyar</h3>
+    </div>
+    <div class="card">
+      <p class="helptext" style="margin-bottom:16px;">Se abrirá el escáner directamente, sin pedir PIN — úsalo solo para apoyar un stand con poco personal.</p>
+      <div id="lista-stands-mkt-tiles"></div>
+    </div>
+    <button class="btn btn-secondary" onclick="irA('screen-dashboard-mkt')"><svg class="icon icon-md" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> VOLVER AL DASHBOARD</button>
+  </div>
+
+  <div id="screen-buscador-mkt" class="screen">
+    <div class="card" style="background: linear-gradient(135deg, var(--purple-deep), var(--purple-dark)); color:white; text-align:center;">
+      <h3 style="margin:0; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;"><svg class="icon icon-lg" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>Buscador de Asistentes</h3>
+    </div>
+    <div class="card">
+      <input type="text" id="mkt-buscador-input" placeholder="Buscar por nombre, empresa, RUC o ID..." oninput="filtrarAsistentesMKT()" style="margin-bottom:10px; height:48px;">
+      <div id="mkt-lista-busqueda" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--gray-line); border-radius: 10px; padding: 4px 8px;">
+        <p style="text-align:center; color:var(--gray); font-size:13px;">Cargando lista...</p>
+      </div>
+      <button type="button" onclick="exportarAptosSorteo()" style="margin-top:14px; width:100%; background:var(--success); color:white; border:none; padding: 14px; border-radius:12px; font-size:13.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit;">
+        <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg> Descargar Lista de aptos al sorteo
+      </button>
+    </div>
+    <button class="btn btn-secondary" onclick="irA('screen-dashboard-mkt')"><svg class="icon icon-md" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> VOLVER AL DASHBOARD</button>
+  </div>
+
+<div id="modal-loading-progreso" class="modal" style="background: rgba(247,244,247,0.97); z-index: 2000; display: none; align-items: center; justify-content: center; flex-direction: column;">
+  <div style="text-align: center; margin-top: 40vh;">
+    <div class="spinner" style="border: 4px solid var(--purple-tint-10); border-top: 4px solid var(--purple); border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 0 auto 20px auto;"></div>
+    <h3 style="color: var(--purple-deep); margin: 0 0 5px 0; font-weight:700;">Consultando progreso...</h3>
+    <p style="color: var(--gray); margin: 0; font-size: 14px;">Buscando tus marcas en la base de datos</p>
+  </div>
+</div>
+
+<div id="screen-dashboard-mkt" class="screen">
+    <div class="card" style="background: linear-gradient(135deg, var(--purple-deep), var(--purple-dark)); color:white; text-align:center;">
+      <p class="eyebrow" style="color:var(--purple-tint-20); margin-bottom:2px;">Panel interno</p>
+      <h3 style="margin:0; font-weight:700;">Métricas en Tiempo Real</h3>
+    </div>
+
+    <div class="mkt-kpi-row" style="display: flex; gap: 12px; margin-bottom: 16px;">
+      <div class="card" style="flex: 1; text-align: center; padding: 18px 12px; margin:0;">
+        <h1 id="mkt-total-asistentes" style="margin:0; font-size:34px; font-weight:700; color:var(--purple-deep); line-height:1;">--</h1>
+        <p style="margin:6px 0 0 0; font-size:12px; font-weight:600; color:var(--gray);">Asistentes</p>
+      </div>
+      <div class="card" style="flex: 1; text-align: center; padding: 18px 12px; margin:0; background:var(--success-tint);">
+        <h1 id="mkt-total-sorteo" style="margin:0; font-size:34px; font-weight:700; color:var(--success); line-height:1;">--</h1>
+        <p style="margin:6px 0 0 0; font-size:12px; font-weight:600; color:var(--success);">Aptos Sorteo</p>
+      </div>
+      <div class="card" style="flex: 1; text-align: center; padding: 18px 12px; margin:0; background:var(--purple-tint-04);">
+        <h1 id="mkt-total-inscritos" style="margin:0; font-size:34px; font-weight:700; color:var(--purple); line-height:1;">--</h1>
+        <p style="margin:6px 0 0 0; font-size:12px; font-weight:600; color:var(--purple);">Inscritos</p>
+      </div>
+    </div>
+
+    <div class="mkt-cols">
+    <div>
+    <div class="card" style="background: var(--purple-tint-04); box-shadow:none;">
+      <p class="eyebrow" style="margin-bottom:10px; display:flex; align-items:center; gap:5px; line-height:1;"><svg class="icon icon-sm" style="vertical-align:0; margin-top:-1px;" viewBox="0 0 24 24"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>Control de Operaciones en Puerta</p>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-main" onclick="abrirModalCamara('reader-general', procesarCheckInGeneral)" style="flex:1; margin:0; height: 52px; font-size:14.5px; background: var(--purple-deep);">
+  <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"/><circle cx="12" cy="13" r="3"/></svg> ESCANEAR INGRESO
+</button>
+        <button class="btn btn-main" onclick="abrirRegistro()" style="flex:1; margin:0; height: 52px; font-size:14.5px;">
+          <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M13 21h8"/><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg> REGISTRO MANUAL
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4 style="margin-top:0; margin-bottom:12px; font-weight:700; color:var(--ink);">Herramientas</h4>
+      <button class="btn btn-outline" onclick="abrirBuscadorMKT()"><svg class="icon icon-md" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg> BUSCAR ASISTENTES</button>
+      <button class="btn btn-outline" onclick="abrirApoyoStandsMKT()" style="margin-bottom:0;"><svg class="icon icon-md" viewBox="0 0 24 24"><path d="M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5"/><path d="M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244"/><path d="M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05"/></svg> APOYAR UN STAND (SIN PIN)</button>
+    </div>
+    </div>
+
+    <div>
+    <div class="card">
+      <h4 style="margin-top:0; display:flex; justify-content:space-between; align-items:center; font-weight:700; color:var(--ink);">
+        Tráfico por Stand <span onclick="cargarMetricasMKT()" style="color:var(--purple); font-size:12px; cursor:pointer; font-weight:600; display:inline-flex; align-items:center; gap:4px;"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>Refrescar</span>
+      </h4>
+      <div id="mkt-ranking-stands">Cargando datos...</div>
+    </div>
+    </div>
+    </div>
+
+    <button class="btn btn-secondary" onclick="cerrarSesionMKT()"><svg class="icon icon-md" viewBox="0 0 24 24"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg> CERRAR SESIÓN</button>
+  </div>
+
+<div id="modal-camara-general" class="modal">
+  <div class="app-container">
+    <h3 style="text-align:center; color:var(--purple-deep); font-weight:700;">Escáner</h3>
+    <div class="scan-hint"><span class="dot"></span>Centra el QR en el recuadro. Si no enfoca, aleja unos centímetros la credencial.</div>
+    <div class="viewfinder">
+      <div id="reader-general" style="width:100%;"></div>
+      <div class="viewfinder-corner tl"></div>
+      <div class="viewfinder-corner tr"></div>
+      <div class="viewfinder-corner bl"></div>
+      <div class="viewfinder-corner br"></div>
+    </div>
+    <button class="btn btn-danger" style="margin-top:20px;" onclick="cerrarModalCamaraGeneral()"><svg class="icon icon-md" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> CERRAR</button>
+  </div>
+</div>
+
+<div id="modal-manual" class="modal">
+  <div class="app-container">
+  <h3 id="titulo-modal" style="color:var(--purple-deep); font-weight:700; margin-top:0;">Nuevo Registro / Búsqueda</h3>
+
+  <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--gray); margin:-4px 0 16px 0; cursor:pointer;">
+    <input type="checkbox" id="chk-auto-print" checked onchange="try{localStorage.setItem('auto-print-fiberlux-isp', this.checked ? '1' : '0')}catch(e){}">
+    Imprimir etiqueta automáticamente al guardar
+  </label>
+
+  <input type="hidden" id="edit-id" value="">
+
+  <input type="text" id="nom" placeholder="Nombres y apellidos" oninput="this.value = this.value.replace(/(^\w|\s\w)/g, m => m.toUpperCase()); buscarCoincidenciasLocal();">
+  <input type="email" id="ema" placeholder="Email">
+  <input type="tel" id="cel" placeholder="Número de Celular" inputmode="numeric" pattern="[0-8]*">
+  <input type="tel" id="ruc" placeholder="RUC (11 dígitos, opcional)" inputmode="numeric" maxlength="11" pattern="[0-9]*" oninput="this.value = this.value.replace(/\D/g,'').slice(0,11); autocompletarEmpresaPorRuc(); buscarCoincidenciasLocal();">
+  <p id="ruc-status" class="helptext" style="margin:-10px 0 14px 4px; min-height:16px;"></p>
+  <input type="text" id="emp" placeholder="Empresa / Institución" oninput="this.value = this.value.toUpperCase(); buscarCoincidenciasLocal();">
+
+  <button class="btn btn-main" onclick="enviarManual()" id="save-btn">GUARDAR NUEVO Y MARCAR</button>
+  <button class="btn btn-secondary" onclick="cerrarRegistro()">CANCELAR</button>
+
+<button type="button" onclick="refrescarPanelManual()" class="btn btn-dark" style="height:50px; margin-top: 6px;">
+    <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg> REFRESCAR / NUEVO REGISTRO
+  </button>
+
+  <div id="lista-coincidencias" style="margin-top: 15px; max-height: 220px; overflow-y: auto; text-align: left;"></div>
+
+<div id="preview-wrapper" style="display: none; margin-top: 20px; padding: 16px; background: var(--card-bg); border-radius: 14px; border: 1px solid var(--gray-line); box-shadow: var(--shadow-card); align-items: center; flex-direction: column;">
+    <h5 style="margin: 0 0 15px 0; color: var(--gray); font-size: 13px; font-weight:700;">Vista Previa de Etiqueta</h5>
+
+    <div id="etiquetaImpresion" class="etiqueta-print-box">
+        <span class="rol-tag">Asistente</span>
+        <div class="nombre-container">
+            <h1 id="printNombre" class="nombre-texto"></h1>
+        </div>
+        <div class="empresa-wrapper">
+    <svg viewBox="0 0 350 20" width="100%" height="100%" preserveAspectRatio="xMinYMid meet">
+        <text id="printEmpresa" x="0" y="22" font-family="Poppins" font-weight="600" font-size="22" fill="#000000"></text>
+    </svg>
+</div>
+        <div class="qr-container" id="printQR"></div>
+    </div>
+
+    <button class="btn btn-main" style="margin-top: 15px; height: 48px;" onclick="window.print()"><svg class="icon icon-md" viewBox="0 0 24 24"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg> REIMPRIMIR ETIQUETA</button>
+</div>
+  </div>
+</div>
+
+<div id="modal-progreso-asistente" class="modal" style="background: var(--light);">
+  <div class="app-container">
+    <div class="credential-card">
+      <p class="credential-eyebrow"><svg class="icon icon-sm" viewBox="0 0 24 24" style="vertical-align:-2px; margin-right:3px;"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>Credencial verificada</p>
+      <h3 id="asistente-progreso-nombre" class="credential-nombre">Cargando...</h3>
+      <p id="asistente-progreso-empresa" class="credential-empresa"></p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="progress-ring-wrap">
+        <svg viewBox="0 0 160 160" class="progress-ring">
+          <circle class="progress-ring-track" cx="80" cy="80" r="60"></circle>
+          <circle id="progreso-ring-circle" class="progress-ring-fill" cx="80" cy="80" r="60"></circle>
+        </svg>
+        <div class="progress-ring-center">
+          <h1 id="progreso-contador" style="margin:0; font-size:32px; font-weight:700; color:var(--ink); line-height:1; transition: color 0.4s ease;">0/16</h1>
+          <p style="margin:6px 0 0 0; font-weight:600; color:var(--gray); font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Stands</p>
+        </div>
+      </div>
+    </div>
+    <div id="status-sorteo-box"></div>
+    <div class="card">
+      <h4 style="margin-top:0; font-weight:700; color:var(--ink);">Checklist de Marcas</h4>
+      <div id="lista-check-stands"></div>
+    </div>
+
+    <div class="ad-carousel" id="ad-carousel-progreso"></div>
+
+    <button class="btn btn-secondary" onclick="cerrarModalProgreso()"><svg class="icon icon-md" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> VOLVER AL MENÚ</button>
+  </div>
+</div>
+
+<script>
+  // ==============================================
+  // 🔌 CLIENTE SUPABASE
+  // ==============================================
+  // La URL y la clave "publishable" NO son secretos (equivalen a la vieja
+  // anon key) — están hechas para vivir en el cliente. Lo que protege los
+  // datos es RLS + Auth en el servidor, no ocultar esta clave.
+  const SUPABASE_URL = 'https://twdhsipvaitoclcxlltk.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_UdkbKrXLtV89-edt_sGoiw_IrAe63-S';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+  // Cuenta única de Supabase Auth compartida por el equipo MKT (reemplaza a
+  // la contraseña única de antes). El campo de login solo pide contraseña,
+  // igual que hoy — el email va fijo aquí porque no es secreto, solo un
+  // identificador de cuenta.
+  const EMAIL_MKT_COMPARTIDO = 'hola@fiberlux.pe';
+
+  // Total de stands del evento — se sobreescribe con el valor real (data.maxStands
+  // o el conteo de STANDS) apenas carga; este es solo el valor inicial mientras llega.
+  let MAX_STANDS = 16;
+  // Lista de stands {id, nombre, activo, orden} — ya no hardcodeada: se trae
+  // en vivo de la vista pública `stands_publico` (sin PIN) al cargar la página.
+  let STANDS = [];
+  let activeScanner;
+  let currentPinStand = "";
+  let standSeleccionadoIndice = null; // tile elegido en el login normal de stand
+  let modoStandAdmin = false;         // true cuando se entra por "Apoyar un Stand (sin PIN)"
+  let standAdminIndice = null;
+
+  // 🔔 Feedback no bloqueante: reemplaza alert() para no congelar el hilo de JS
+  // durante escaneos consecutivos rápidos en puerta/stands.
+  function tipoDesdeTexto(msg) {
+    const s = typeof msg === 'string' ? msg : (msg && msg.mensaje) ? msg.mensaje : '';
+    if (s.includes('✅')) return 'success';
+    if (s.includes('❌') || s.includes('⛔')) return 'danger';
+    if (s.includes('⚠️')) return 'warning';
+    return 'info';
+  }
+
+  function mostrarToast(mensaje, tipo, duracion) {
+    tipo = tipo || tipoDesdeTexto(mensaje);
+    duracion = duracion || 3400;
+    const cont = document.getElementById('toast-container');
+    if (!cont) return;
+    const texto = typeof mensaje === 'string' ? mensaje : (mensaje && mensaje.mensaje) ? mensaje.mensaje : JSON.stringify(mensaje);
+    const iconos = { success: '✅', danger: '⛔', warning: '⚠️', info: 'ℹ️' };
+    const t = document.createElement('div');
+    t.className = `toast toast-${tipo}`;
+    t.innerHTML = `<span class="toast-icon">${iconos[tipo] || iconos.info}</span><span class="toast-msg"></span>`;
+    t.querySelector('.toast-msg').textContent = texto;
+    cont.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('toast-show'));
+    setTimeout(() => {
+      t.classList.remove('toast-show');
+      setTimeout(() => t.remove(), 250);
+    }, duracion);
+  }
+
+  // ==============================================
+  // 📣 CARRUSEL DE PUBLICIDAD DE MARCA
+  // ==============================================
+  // Las piezas y el interruptor on/off viven en Supabase (tablas ad_config /
+  // ad_banners, ver supabase/ad_banners.sql) — se administran desde el Table
+  // Editor, sin tocar este archivo. Si el interruptor global está apagado, o
+  // no hay banners activos para una ubicación, ese carrusel se oculta entero
+  // (no deja un espacio vacío).
+  async function cargarPublicidad_(idContenedor, ubicacion) {
+    const cont = document.getElementById(idContenedor);
+    if (!cont) return;
+    try {
+      const [{ data: config }, { data: banners, error: errBanners }] = await Promise.all([
+        sb.from('ad_config').select('activo').eq('id', 1).single(),
+        sb.from('ad_banners')
+          .select('img_url, link')
+          .eq('ubicacion', ubicacion)
+          .eq('activo', true)
+          .order('orden', { ascending: true }),
+      ]);
+
+      if (errBanners) throw errBanners;
+
+      const espacioActivo = config ? config.activo !== false : true;
+      if (!espacioActivo || !banners || banners.length === 0) {
+        cont.style.display = 'none';
+        return;
+      }
+
+      cont.style.display = '';
+      iniciarCarrusel(idContenedor, banners.map(b => ({ img: b.img_url, alt: 'Publicidad', link: b.link || null })));
+    } catch (e) {
+      console.error('cargarPublicidad_ (' + ubicacion + '):', e);
+      cont.style.display = 'none'; // ante cualquier error, mejor ocultar que mostrar roto
+    }
+  }
+
+  function iniciarCarrusel(idContenedor, banners, intervaloMs) {
+    const cont = document.getElementById(idContenedor);
+    if (!cont || !banners || banners.length === 0) return;
+    intervaloMs = intervaloMs || 4500;
+
+    cont.innerHTML = banners.map((b, i) => {
+      const imgTag = `<img src="${b.img}" alt="${b.alt || 'Publicidad'}" loading="lazy">`;
+      const contenido = b.link ? `<a href="${b.link}" target="_blank" rel="noopener">${imgTag}</a>` : imgTag;
+      return `<div class="ad-slide${i === 0 ? ' ad-slide-active' : ''}" data-slide="${i}">${contenido}</div>`;
+    }).join('') + (banners.length > 1
+      ? `<div class="ad-dots">${banners.map((_, i) => `<span class="ad-dot${i === 0 ? ' ad-dot-active' : ''}" data-dot="${i}"></span>`).join('')}</div>`
+      : '');
+
+    if (banners.length <= 1) return;
+    let actual = 0;
+    let temporizador = null;
+
+    function irASlide(indiceNuevo) {
+      const anterior = actual;
+      actual = ((indiceNuevo % banners.length) + banners.length) % banners.length;
+      if (actual === anterior) return;
+      cont.querySelector(`[data-slide="${anterior}"]`).classList.remove('ad-slide-active');
+      cont.querySelector(`[data-slide="${actual}"]`).classList.add('ad-slide-active');
+      cont.querySelector(`[data-dot="${anterior}"]`)?.classList.remove('ad-dot-active');
+      cont.querySelector(`[data-dot="${actual}"]`)?.classList.add('ad-dot-active');
+    }
+
+    function reiniciarAutoRotacion() {
+      clearInterval(temporizador);
+      temporizador = setInterval(() => irASlide(actual + 1), intervaloMs);
+    }
+    reiniciarAutoRotacion();
+
+    // 👉 Arrastre: desliza (dedo o mouse) para cambiar de banner a mano.
+    // Pointer Events cubre touch y mouse con el mismo código.
+    let xInicioArrastre = null;
+    let huboArrastre = false;
+    cont.addEventListener('pointerdown', (e) => {
+      xInicioArrastre = e.clientX;
+      huboArrastre = false;
+      cont.setPointerCapture(e.pointerId);
+    });
+    cont.addEventListener('pointermove', (e) => {
+      if (xInicioArrastre === null) return;
+      if (Math.abs(e.clientX - xInicioArrastre) > 10) huboArrastre = true;
+    });
+    cont.addEventListener('pointerup', (e) => {
+      if (xInicioArrastre === null) return;
+      const delta = e.clientX - xInicioArrastre;
+      xInicioArrastre = null;
+      if (Math.abs(delta) > 40) {
+        irASlide(actual + (delta < 0 ? 1 : -1));
+        reiniciarAutoRotacion();
+      }
+    });
+    // Si el gesto fue un arrastre real (no un tap), cancela el clic del
+    // link del sponsor — evita abrirlo sin querer al deslizar.
+    cont.addEventListener('click', (e) => {
+      if (huboArrastre) { e.preventDefault(); huboArrastre = false; }
+    }, true);
+  }
+
+  // ==============================================
+  // 🌗 TEMA CLARO / OSCURO (persistente vía localStorage)
+  // ==============================================
+  function esOscuroActivo() {
+    const forzado = document.documentElement.getAttribute('data-theme');
+    if (forzado === 'dark') return true;
+    if (forzado === 'light') return false;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function actualizarIconoTema() {
+    const oscuro = esOscuroActivo();
+    const luna = document.getElementById('icono-luna');
+    const sol = document.getElementById('icono-sol');
+    if (luna) luna.style.display = oscuro ? 'none' : '';
+    if (sol) sol.style.display = oscuro ? '' : 'none';
+  }
+
+  function aplicarTema(tema) {
+    if (tema === 'dark' || tema === 'light') {
+      document.documentElement.setAttribute('data-theme', tema);
+    } else {
+      document.documentElement.removeAttribute('data-theme'); // sigue la preferencia del sistema
+    }
+    actualizarIconoTema();
+  }
+
+  function alternarTema() {
+    const nuevo = esOscuroActivo() ? 'light' : 'dark';
+    try { localStorage.setItem('tema-fiberlux-isp', nuevo); } catch (e) {}
+    aplicarTema(nuevo);
+  }
+
+  (function inicializarTema() {
+    let guardado = null;
+    try { guardado = localStorage.getItem('tema-fiberlux-isp'); } catch (e) {}
+    aplicarTema(guardado);
+  })();
+
+  window.onload = async function() {
+    cargarPublicidad_('ad-carousel-home', 'home');
+    cargarPublicidad_('ad-carousel-progreso', 'progreso');
+    await cargarStands();
+    renderizarTilesStands();
+    actualizarIconoTema();
+  };
+
+  // ==============================================
+  // 🏢 SELECCIÓN DE STAND POR TILES (login normal)
+  // ==============================================
+  // Trae la lista pública de stands (sin PIN) desde Supabase — reemplaza al
+  // array NOMBRES_STANDS hardcodeado. Sin sesión (anon), funciona porque
+  // stands_publico tiene grant explícito a "anon" (ver supabase/grants.sql).
+  async function cargarStands() {
+    const { data, error } = await sb
+      .from('stands_publico')
+      .select('id, nombre, activo, orden')
+      .eq('activo', true)
+      .order('orden', { ascending: true });
+    if (error) {
+      mostrarToast('⚠️ No se pudo cargar la lista de stands. Recarga la página.', 'danger');
+      return;
+    }
+    STANDS = data || [];
+    MAX_STANDS = STANDS.length;
+  }
+
+  function renderizarTilesStands() {
+    const cont = document.getElementById('lista-stands-tiles');
+    if (!cont) return;
+    cont.innerHTML = STANDS.map((stand, i) => `
+      <button type="button" class="stand-tile" id="tile-stand-${i}" onclick="seleccionarStandTile(${i})">
+        <span>${stand.nombre}</span><span class="chev">›</span>
+      </button>`).join('');
+  }
+
+  function seleccionarStandTile(indice) {
+    standSeleccionadoIndice = indice;
+    document.querySelectorAll('#lista-stands-tiles .stand-tile').forEach(t => t.classList.remove('stand-tile-active'));
+    document.getElementById(`tile-stand-${indice}`).classList.add('stand-tile-active');
+    document.getElementById('stand-seleccionado-nombre').innerText = STANDS[indice].nombre;
+    document.getElementById('panel-pin-stand').style.display = 'block';
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-input').focus();
+  }
+
+  function cerrarPanelPinStand() {
+    standSeleccionadoIndice = null;
+    document.getElementById('panel-pin-stand').style.display = 'none';
+    document.querySelectorAll('#lista-stands-tiles .stand-tile').forEach(t => t.classList.remove('stand-tile-active'));
+  }
+
+  // Pantallas del panel MKT: se ensanchan en laptop/tablet (mesa de control
+  // del evento), a diferencia de asistente/stand que viven siempre en un
+  // teléfono. Ver la clase .wide-mkt en <style>.
+  const PANTALLAS_MKT_ANCHAS = ['screen-dashboard-mkt', 'screen-mkt-stands', 'screen-buscador-mkt'];
+
+  function irA(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+    if(screenId !== 'screen-stand-scan') detenerEscánerActivo();
+    document.querySelector('.app-container').classList.toggle('wide-mkt', PANTALLAS_MKT_ANCHAS.includes(screenId));
+  }
+
+  // Si una RPC/Edge Function protegida responde que la sesión expiró/no es
+  // staff, saca al usuario al login en vez de dejarlo ver un dashboard que ya
+  // no puede refrescar datos. Reemplaza al viejo chequeo de tokenAdmin: ahora
+  // la sesión la maneja supabase-js sola (renovación automática incluida);
+  // esto solo cubre el caso de que la cuenta haya sido removida de
+  // admin_users o el JWT haya sido revocado.
+  function sesionValida(data) {
+    const msg = typeof data === 'string' ? data : (data && data.mensaje) || '';
+    if (msg.includes('Sesión no autorizada') || msg.includes('autorizada o expirada')) {
+      sb.auth.signOut();
+      mostrarToast("⛔ Tu sesión de administrador expiró. Vuelve a ingresar la contraseña.", "danger", 4500);
+      irA('screen-login-mkt');
+      return false;
+    }
+    return true;
+  }
+
+  async function abrirModalCamara(elementId, callbackSuccess) {
+    if(elementId === 'reader-general') document.getElementById('modal-camara-general').style.display = 'block';
+    setTimeout(async () => {
+      try {
+        activeScanner = new Html5Qrcode(elementId);
+        await activeScanner.start({ facingMode: "environment" }, { fps: 12, qrbox: { width: 260, height: 260 } }, callbackSuccess);
+      } catch (err) {
+        mostrarToast("⚠️ Error de cámara. Verifica los permisos del navegador.", "danger");
+        if(elementId === 'reader-general') cerrarModalCamaraGeneral();
+      }
+    }, 350);
+  }
+
+  // Check-in de puerta: marca asistencia_at en la fila existente del asistente.
+  // Update directo con RLS (staff autenticado + es_staff_mkt()) — no hace
+  // falta Edge Function: es una escritura a una sola fila por su PK, sin
+  // generación de ID ni riesgo de carrera.
+  async function procesarCheckInGeneral(codigo) {
+    cerrarModalCamaraGeneral();
+    document.getElementById('status-display').style.display = 'flex';
+    const id = codigo.toUpperCase().trim();
+    const { data, error } = await sb
+      .from('attendees')
+      .update({ asistencia_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('nombre')
+      .maybeSingle();
+    document.getElementById('status-display').style.display = 'none';
+    if (error) {
+      if (!sesionValida({ mensaje: error.message })) return;
+      mostrarToast("⚠️ Error de conexión al marcar asistencia.", "danger");
+      return;
+    }
+    if (!data) { mostrarToast("❌ El código escaneado no existe.", "danger"); return; }
+    mostrarToast("✅ Asistencia registrada para: " + data.nombre, "success");
+  }
+
+  function cerrarModalCamaraGeneral() {
+    detenerEscánerActivo();
+    document.getElementById('modal-camara-general').style.display = 'none';
+  }
+
+  async function consultarProgresoAsistente(codigoId) {
+    cerrarModalCamaraGeneral();
+    const loader = document.getElementById('modal-loading-progreso');
+    loader.style.display = 'flex';
+    const { data, error } = await sb.rpc('obtener_progreso', { p_id: codigoId });
+    loader.style.display = 'none';
+    if (error) { mostrarToast("❌ Error de conexión al consultar el progreso. Intente nuevamente.", "danger"); return; }
+    if (!data.success) return mostrarToast(data.mensaje, "danger");
+    document.getElementById('asistente-progreso-nombre').innerText = data.nombre;
+    document.getElementById('asistente-progreso-empresa').innerText = data.empresa;
+    MAX_STANDS = data.maxStands || MAX_STANDS;
+    document.getElementById('progreso-contador').innerText = `${data.total}/${MAX_STANDS}`;
+    animarAnilloProgreso(data.total, MAX_STANDS, data.aptoSorteo);
+
+    const boxSorteo = document.getElementById('status-sorteo-box');
+    const faltan = MAX_STANDS - data.total;
+    boxSorteo.innerHTML = data.aptoSorteo
+      ? `<div class="alert-banner alert-success"><svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg><div><strong>¡Apto para el sorteo!</strong><span>Completaste los ${MAX_STANDS} stands del recorrido.</span></div></div>`
+      : `<div class="alert-banner"><svg class="icon icon-lg" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><div><strong>Faltan stands</strong><span>Te ${faltan === 1 ? 'falta' : 'faltan'} ${faltan} ${faltan === 1 ? 'marca' : 'marcas'} para calificar al sorteo.</span></div></div>`;
+
+    document.getElementById('lista-check-stands').innerHTML = data.detalle.map(stand => `
+      <div class="check-row">
+        <div class="icon-status ${stand.visitado ? 'done' : 'pending'}">
+          ${stand.visitado
+            ? '<svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>'
+            : '<svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'}
+        </div>
+        <div class="check-nombre">${stand.nombre}</div>
+        <div class="check-estado ${stand.visitado ? 'done' : 'pending'}">${stand.visitado ? 'Completado' : 'Pendiente'}</div>
+      </div>`).join('');
+    document.getElementById('modal-progreso-asistente').style.display = 'block';
+  }
+
+  function cerrarModalProgreso() { document.getElementById('modal-progreso-asistente').style.display = 'none'; }
+
+  // Anima el anillo circular de progreso (SVG stroke-dashoffset, no afecta layout).
+  function animarAnilloProgreso(total, max, apto) {
+    const circulo = document.getElementById('progreso-ring-circle');
+    if (!circulo) return;
+    const circunferencia = 377;
+    const offsetFinal = circunferencia * (1 - Math.min(total, max) / max);
+    circulo.style.stroke = apto ? 'var(--success)' : 'var(--purple)';
+    circulo.classList.toggle('apto', !!apto);
+    circulo.style.transition = 'none';
+    circulo.style.strokeDashoffset = circunferencia;
+    void circulo.getBoundingClientRect(); // fuerza el reflow para que la transición se reproduzca desde 0
+    circulo.style.transition = '';
+    requestAnimationFrame(() => { circulo.style.strokeDashoffset = offsetFinal; });
+
+    // Contador central: verde al completar (además de celebrar, arregla el
+    // contraste — var(--purple-deep) fijo daba 1.94:1 en modo oscuro contra
+    // la card, muy por debajo del mínimo de 4.5:1).
+    const contador = document.getElementById('progreso-contador');
+    if (contador) contador.style.color = apto ? 'var(--success)' : 'var(--ink)';
+  }
+
+  // Cuenta ascendente para los KPI del dashboard MKT (solo texto, sin animar layout).
+  function animarContador(idElemento, valorFinal) {
+    const el = document.getElementById(idElemento);
+    if (!el) return;
+    valorFinal = Number(valorFinal) || 0;
+    const inicio = performance.now();
+    const duracionMs = 600;
+    function paso(ahora) {
+      const progreso = Math.min((ahora - inicio) / duracionMs, 1);
+      const suavizado = 1 - Math.pow(1 - progreso, 3);
+      el.innerText = Math.round(valorFinal * suavizado);
+      if (progreso < 1) requestAnimationFrame(paso);
+      else el.innerText = valorFinal;
+    }
+    requestAnimationFrame(paso);
+  }
+
+  async function validarPinStand(btn) {
+    if (standSeleccionadoIndice === null) return mostrarToast("⚠️ Primero toca tu stand en la lista.", "warning");
+    const pin = document.getElementById('pin-input').value.trim();
+    if (btn) { btn.disabled = true; btn.innerText = "VERIFICANDO..."; }
+
+    const { data, error } = await sb.functions.invoke('validar-pin-stand', { body: { pin } });
+    if (btn) { btn.disabled = false; btn.innerText = "INGRESAR"; }
+
+    if (error) { mostrarToast("⚠️ Error de conexión al validar el PIN.", "danger"); return; }
+    if (!data.success) return mostrarToast(data.mensaje || "❌ PIN incorrecto.", "danger");
+    // El PIN es válido, pero debe corresponder al stand que el staff seleccionó.
+    if (data.nombre !== STANDS[standSeleccionadoIndice].nombre) {
+      return mostrarToast(`❌ Ese PIN no corresponde a ${STANDS[standSeleccionadoIndice].nombre}.`, "danger");
+    }
+    currentPinStand = pin;
+    modoStandAdmin = false;
+    document.getElementById('stand-title').innerText = `STAND: ${data.nombre.toUpperCase()}`;
+    document.getElementById('pin-input').value = "";
+    cerrarPanelPinStand();
+    irA('screen-stand-scan');
+    abrirModalCamara('reader-stand', procesarEscaneoStand);
+  }
+
+  async function procesarEscaneoStand(codigo) {
+    if (activeScanner) activeScanner.pause();
+    const boxAlerta = document.getElementById('stand-alert');
+    boxAlerta.style.display = "flex"; boxAlerta.style.background = "var(--info-tint)"; boxAlerta.style.color = "var(--info)";
+    boxAlerta.innerHTML = "⏳ Procesando...";
+
+    const attendeeId = codigo.toUpperCase().trim();
+    let texto;
+    try {
+      if (modoStandAdmin) {
+        // Apoyo MKT sin PIN: escritura directa, autorizada por RLS (staff
+        // autenticado + es_staff_mkt()) en vez de un PIN — ya tenemos el
+        // stand_id de STANDS[standAdminIndice], no hace falta Edge Function.
+        const stand = STANDS[standAdminIndice];
+        const { data: attendee, error: attendeeError } = await sb
+          .from('attendees').select('id, nombre').eq('id', attendeeId).maybeSingle();
+        if (attendeeError) throw attendeeError;
+        if (!attendee) {
+          texto = "❌ Código de asistente no válido.";
+        } else {
+          const { data: inserted, error: insertError } = await sb
+            .from('stand_visits')
+            .upsert({ attendee_id: attendee.id, stand_id: stand.id }, { onConflict: 'attendee_id,stand_id', ignoreDuplicates: true })
+            .select();
+          if (insertError) throw insertError;
+          texto = (!inserted || inserted.length === 0)
+            ? `ℹ️ ${attendee.nombre} ya estaba registrado en ${stand.nombre}.`
+            : `✅ ${stand.nombre} registró a: ${attendee.nombre}`;
+        }
+      } else {
+        const { data, error } = await sb.functions.invoke('marcar-stand', { body: { pin: currentPinStand, attendeeId } });
+        if (error) throw error;
+        texto = data.mensaje || 'Respuesta inesperada del servidor.';
+      }
+    } catch (e) {
+      boxAlerta.style.display = "none";
+      mostrarToast("⚠️ Error de red al marcar el stand. Intenta de nuevo.", "danger");
+      if (activeScanner) activeScanner.resume();
+      return;
+    }
+
+    if (!sesionValida({ mensaje: texto })) { boxAlerta.style.display = "none"; if (activeScanner) activeScanner.resume(); return; }
+    if (texto.includes("✅") || texto.includes("ℹ️")) { boxAlerta.style.background = "var(--success-tint)"; boxAlerta.style.color = "var(--success)"; }
+    else { boxAlerta.style.background = "var(--danger-tint)"; boxAlerta.style.color = "var(--danger)"; }
+    boxAlerta.innerText = texto;
+    setTimeout(() => { if (activeScanner && activeScanner.isScanning) { activeScanner.resume(); boxAlerta.style.display = "none"; } }, 2500);
+  }
+
+  function salirDeStand() {
+    currentPinStand = "";
+    if (modoStandAdmin) {
+      modoStandAdmin = false;
+      standAdminIndice = null;
+      irA('screen-mkt-stands');
+    } else {
+      irA('screen-selector');
+    }
+  }
+
+  // ==============================================
+  // 🆘 APOYO A STANDS SIN PIN (desde el panel MKT)
+  // ==============================================
+  function abrirApoyoStandsMKT() {
+    const cont = document.getElementById('lista-stands-mkt-tiles');
+    cont.innerHTML = STANDS.map((stand, i) => `
+      <button type="button" class="stand-tile" onclick="entrarStandDesdeMKT(${i})">
+        <span>${stand.nombre}</span><span class="chev">›</span>
+      </button>`).join('');
+    irA('screen-mkt-stands');
+  }
+
+  function entrarStandDesdeMKT(indice) {
+    modoStandAdmin = true;
+    standAdminIndice = indice;
+    currentPinStand = "";
+    document.getElementById('stand-title').innerText = `STAND: ${STANDS[indice].nombre.toUpperCase()} (APOYO MKT)`;
+    irA('screen-stand-scan');
+    abrirModalCamara('reader-stand', procesarEscaneoStand);
+  }
+  function detenerEscánerActivo() { if (activeScanner && activeScanner.isScanning) activeScanner.stop().then(() => activeScanner.clear()).catch(e => console.log(e)); }
+
+  function abrirRegistro() {
+    document.getElementById('modal-manual').style.display = 'block';
+    sincronizarChecklistAutoPrint();
+    // Carga en segundo plano (sin bloquear el modal) para que el buscador de
+    // coincidencias tenga datos frescos — bajo demanda, no en cada refresh del dashboard.
+    sb.rpc('obtener_lista_asistentes_mkt').then(({ data, error }) => {
+      if (error) return;
+      if (sesionValida(data) && data.success) { todosLosAsistentesMKT = data.asistentes; MAX_STANDS = data.maxStands || MAX_STANDS; }
+    });
+  }
+
+  // 🖨️ IMPRESIÓN AUTOMÁTICA DE ETIQUETA AL REGISTRAR/MARCAR
+  // El staff puede desactivarla con el checkbox del modal (persistido en localStorage)
+  // para casos en que solo quiera buscar/editar sin imprimir en cada acción.
+  function sincronizarChecklistAutoPrint() {
+    const chk = document.getElementById('chk-auto-print');
+    if (!chk) return;
+    let guardado = null;
+    try { guardado = localStorage.getItem('auto-print-fiberlux-isp'); } catch (e) {}
+    chk.checked = guardado !== '0'; // activado por defecto
+  }
+
+  function imprimirEtiquetaAuto() {
+    const chk = document.getElementById('chk-auto-print');
+    if (chk && !chk.checked) return;
+    // Pequeño margen para que el QR (canvas/img generado por qrcodejs) termine de
+    // pintarse antes de abrir el diálogo de impresión del navegador.
+    requestAnimationFrame(() => setTimeout(() => window.print(), 150));
+  }
+  function cerrarRegistro() { 
+      document.getElementById('modal-manual').style.display = 'none'; 
+      // Oculta el preview al cerrar el modal
+      const preview = document.getElementById('preview-wrapper');
+      if(preview) preview.style.display = 'none';
+  }
+
+// 🔎 AUTOCOMPLETAR EMPRESA A PARTIR DEL RUC
+  // Al staff le es más fácil anotar/escanear el RUC (números) que escribir bien el
+  // nombre de la empresa. El servidor busca primero en los asistentes ya registrados
+  // en este evento y, si no lo encuentra, consulta la API de SUNAT (Decolecta).
+  let temporizadorRuc = null;
+  function autocompletarEmpresaPorRuc() {
+    const rucInput = document.getElementById('ruc');
+    const estado = document.getElementById('ruc-status');
+    if (!rucInput || !estado) return;
+    const ruc = rucInput.value.trim();
+
+    clearTimeout(temporizadorRuc);
+    if (ruc.length !== 11) { estado.innerHTML = ''; return; }
+
+    mostrarEstadoRuc(estado, 'search', 'gray', 'Buscando empresa...');
+
+    temporizadorRuc = setTimeout(async () => {
+      const { data, error } = await sb.functions.invoke('buscar-empresa-por-ruc', { body: { ruc } });
+      if (error) {
+        mostrarEstadoRuc(estado, 'warning', 'warning', 'Error al buscar el RUC, escribe la empresa manualmente.');
+        return;
+      }
+      if (!sesionValida(data)) return;
+      if (data.success) {
+        document.getElementById('emp').value = data.empresa.toString().toUpperCase();
+        mostrarEstadoRuc(estado, 'success', 'success', data.empresa);
+      } else {
+        // El mensaje del servidor puede traer su propio emoji (mismo texto que
+        // usan los toasts) — se recorta para no duplicar icono+emoji aquí.
+        const texto = (data.mensaje || 'RUC no encontrado, escribe la empresa manualmente.').replace(/^\p{Extended_Pictographic}️?\s*/u, '');
+        mostrarEstadoRuc(estado, 'warning', 'warning', texto);
+      }
+    }, 250);
+  }
+
+  // Icono + texto para el estado inline del campo RUC (reemplaza los emoji
+  // 🔎/⚠️/✅ que vivían aquí antes — son un indicador de UI persistente, no
+  // copy de un toast, así que les toca ícono como al resto del chrome).
+  const ICONOS_ESTADO_RUC = {
+    search: '<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>',
+    warning: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+    success: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+  };
+  function mostrarEstadoRuc(el, icono, colorVar, texto) {
+    el.style.color = `var(--${colorVar})`;
+    el.innerHTML = `<svg class="icon" style="width:12px;height:12px;vertical-align:-1px;" viewBox="0 0 24 24">${ICONOS_ESTADO_RUC[icono]}</svg> ${texto}`;
+  }
+
+// 🔍 BUSCADOR EN VIVO MIENTRAS ESCRIBES
+  // Búsqueda en vivo mientras se escribe en Nombre, Empresa o RUC — no solo
+  // nombre: varias personas de una misma empresa suelen registrarse juntas,
+  // así que conviene poder ubicarlas por ese dato también.
+  function buscarCoincidenciasLocal() {
+    const nomTxt = document.getElementById('nom').value.toLowerCase().trim();
+    const empTxt = document.getElementById('emp').value.toLowerCase().trim();
+    const rucTxt = document.getElementById('ruc').value.trim();
+    const contenedor = document.getElementById('lista-coincidencias');
+
+    const hayTermino = nomTxt.length >= 3 || empTxt.length >= 3 || rucTxt.length >= 3;
+    if (!hayTermino || !todosLosAsistentesMKT) {
+      contenedor.innerHTML = "";
+      return;
+    }
+
+    // Buscamos en el caché de la memoria local — coincide por cualquiera de
+    // los tres campos que tenga suficiente texto escrito.
+    const coincidencias = todosLosAsistentesMKT.filter(a =>
+      (nomTxt.length >= 3 && a.nombre.toLowerCase().includes(nomTxt)) ||
+      (empTxt.length >= 3 && (a.empresa || '').toLowerCase().includes(empTxt)) ||
+      (rucTxt.length >= 3 && (a.ruc || '').includes(rucTxt))
+    );
+
+    if (coincidencias.length === 0) {
+      contenedor.innerHTML = "<p style='font-size:12px; color:var(--gray); text-align:center;'>No hay coincidencias. Se creará como registro nuevo.</p>";
+      return;
+    }
+
+    // Dibujamos la lista con las opciones de Marcar y Editar
+    let html = "<h5 style='margin: 0 0 8px 0; color: var(--ink); font-size:13px; font-weight:700;'>Coincidencias encontradas:</h5>";
+    coincidencias.forEach(c => {
+      html += `
+        <div style="background: var(--purple-tint-04); border: 1px solid var(--gray-line); border-radius: 12px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="flex-grow: 1; font-size: 11.5px; line-height: 1.4; color: var(--gray);">
+            <strong style="font-size:13.5px; color:var(--ink);">${c.nombre}</strong><br>
+            ${c.email !== '---' ? c.email : 'Sin correo'} | ${c.celular !== '---' ? c.celular : 'Sin cel'}<br>
+            <svg class="icon" style="width:11px;height:11px;vertical-align:-1px;" viewBox="0 0 24 24"><path d="M10 12h4"/><path d="M10 8h4"/><path d="M14 21v-3a2 2 0 0 0-4 0v3"/><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/></svg> ${c.empresa !== '---' ? c.empresa : 'Sin empresa'} ${c.ruc && c.ruc !== '---' ? '| RUC ' + c.ruc : ''}
+          </div>
+          <div style="display: flex; gap: 6px; margin-left: 10px;">
+            <button onclick="marcarDirecto('${c.id}')" style="background:var(--success); color:white; border:none; width:40px; height:40px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="Marcar Asistencia Rápida" aria-label="Marcar asistencia rápida de ${c.nombre.replace(/"/g, '&quot;')}"><svg class="icon icon-md" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></button>
+            <button onclick="cargarParaEditar('${c.id}', '${c.nombre.replace(/'/g, "\\'")}', '${c.email}', '${c.celular}', '${c.empresa.replace(/'/g, "\\'")}', '${(c.ruc || '').toString().replace(/'/g, "\\'")}')" style="background:var(--warning); color:white; border:none; width:40px; height:40px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="Editar Datos" aria-label="Editar datos de ${c.nombre.replace(/"/g, '&quot;')}"><svg class="icon icon-md" viewBox="0 0 24 24"><path d="M13 21h8"/><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg></button>
+          </div>
+        </div>
+      `;
+    });
+    contenedor.innerHTML = html;
+  }
+
+  // ✏️ CARGAR DATOS AL FORMULARIO PARA EDITAR
+  function cargarParaEditar(id, nombre, email, celular, empresa, ruc) {
+    document.getElementById('edit-id').value = id;
+    document.getElementById('nom').value = nombre !== 'undefined' ? nombre : '';
+    document.getElementById('ema').value = email !== 'undefined' && email !== '---' ? email : '';
+    document.getElementById('cel').value = celular !== 'undefined' && celular !== '---' ? celular : '';
+    document.getElementById('emp').value = empresa !== 'undefined' && empresa !== '---' ? empresa : '';
+    document.getElementById('ruc').value = ruc && ruc !== 'undefined' && ruc !== '---' ? ruc : '';
+    document.getElementById('ruc-status').textContent = '';
+
+    document.getElementById('titulo-modal').innerText = "Editando Registro Existente";
+    const btn = document.getElementById('save-btn');
+    btn.innerText = "ACTUALIZAR DATOS Y MARCAR";
+    btn.style.background = "var(--warning)"; // Cambia a naranja/ámbar de marca
+    document.getElementById('lista-coincidencias').innerHTML = ""; // Limpia la lista
+  }
+
+// ✔️ MARCAR ASISTENCIA DIRECTA Y GENERAR PREVIEW (REPARADO - QR BAJA DENSIDAD)
+async function marcarDirecto(id) {
+  if(!confirm("¿Confirmas el ingreso de este asistente?")) return;
+
+  const btn = document.getElementById('save-btn');
+  if (btn) { btn.innerText = "MARCANDO..."; btn.disabled = true; }
+
+  const { data: fila, error } = await sb
+    .from('attendees')
+    .update({ asistencia_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('nombre')
+    .maybeSingle();
+
+  if (error) { mostrarToast("Error de conexión al marcar asistencia.", "danger"); if (btn) btn.disabled = false; return; }
+  const res = fila ? ("✅ Asistencia registrada para: " + fila.nombre) : "❌ El código escaneado no existe.";
+  if (!sesionValida({ mensaje: res })) { if (btn) { btn.disabled = false; } return; }
+  mostrarToast(res);
+
+  // Buscamos el registro real guardado en el caché de la memoria local
+  const deMemoria = todosLosAsistentesMKT.find(a => a.id === id);
+
+  if (deMemoria) {
+          // 1. HACEMOS VISIBLE EL CONTENEDOR ANTES DE DIBUJAR (CRÍTICO)
+          document.getElementById('preview-wrapper').style.display = 'flex';
+          
+          // 2. Inyectamos los textos al molde de impresión
+          document.getElementById('printNombre').innerText = deMemoria.nombre;
+          
+          // Si usas la Opción 1 (SVG), recuerda cambiar .innerText por .textContent aquí abajo:
+          const elEmpresa = document.getElementById('printEmpresa');
+          if (elEmpresa.tagName.toLowerCase() === 'text') {
+              elEmpresa.textContent = (deMemoria.empresa || "---").toUpperCase();
+          } else {
+              elEmpresa.innerText = (deMemoria.empresa || "---").toUpperCase();
+          }
+          
+          // 3. Dibujamos el QR asegurando el uso exclusivo del ID de base de datos
+          const contenedorQR = document.getElementById("printQR");
+          contenedorQR.innerHTML = "";
+          
+          new QRCode(contenedorQR, {
+              text: deMemoria.id, // <-- Forzamos el uso del ID limpio extraído de memoria
+              width: 50,
+              height: 50,
+              correctLevel: QRCode.CorrectLevel.L // <-- Forzamos Nivel L para romper la densidad visual
+          });
+
+          // Restablecemos el botón principal de guardar
+          if (btn) { btn.innerText = "GUARDAR NUEVO Y MARCAR"; btn.disabled = false; }
+
+          // 🖨️ Imprime la etiqueta en el momento, sin esperar el clic manual del staff
+          imprimirEtiquetaAuto();
+
+      } else {
+          // Si por alguna razón no se encuentra en el caché local, salimos de forma segura
+          mostrarToast("⚠️ Asistente marcado, pero no se encontró en la base de datos local para generar la credencial.", "warning");
+          limpiarYSalir(btn);
+      }
+}
+
+// 🚀 FUNCIÓN PRINCIPAL DE GUARDADO (CREAR O ACTUALIZAR UNIFICADO)
+  async function enviarManual() {
+    const btn = document.getElementById('save-btn');
+
+    // Seguros por si algún campo HTML no existe
+    const elEdit = document.getElementById('edit-id');
+    const elNom = document.getElementById('nom');
+    const elEma = document.getElementById('ema');
+    const elCel = document.getElementById('cel');
+    const elEmp = document.getElementById('emp');
+    const elRuc = document.getElementById('ruc');
+
+    const editId = elEdit ? elEdit.value.trim() : "";
+    const nom = elNom ? elNom.value.trim() : "";
+    const ema = elEma ? elEma.value.trim() : "";
+    const cel = elCel ? elCel.value.trim().replace(/\D/g, '') : "";
+    const emp = elEmp ? elEmp.value.trim() : "";
+    const ruc = elRuc ? elRuc.value.trim() : "";
+
+    // 1️⃣ VALIDACIÓN
+    if (!nom) return mostrarToast("⚠️ El campo de Nombres y Apellidos es obligatorio.", "warning");
+
+    // Si es un usuario NUEVO y no puso correo, le preguntamos si está seguro
+    if (editId === "" && !ema) {
+      if (!confirm("No has ingresado un correo. ¿Deseas registrar a esta persona de todas formas?")) {
+        return; // Aborta si el Staff dice que NO
+      }
+    }
+
+    // 2️⃣ BLOQUEAMOS EL BOTÓN
+    btn.innerText = "PROCESANDO...";
+    btn.disabled = true;
+
+    // 3️⃣ ENVIAMOS A LA EDGE FUNCTION (crea o edita, según haya editId)
+    const { data, error } = await sb.functions.invoke('registro-manual', {
+      body: {
+        mode: editId !== "" ? 'actualizar' : 'crear',
+        id: editId,
+        nombreCompleto: nom, email: ema, celular: cel, empresa: emp, ruc,
+      },
+    });
+
+    if (error) {
+      mostrarToast("⚠️ Error de conexión con el servidor: " + error.message, "danger");
+      limpiarYSalir(btn);
+      return;
+    }
+    if (!sesionValida(data)) { btn.disabled = false; btn.innerText = "GUARDAR NUEVO Y MARCAR"; return; }
+
+    if (data.success) {
+      mostrarToast(data.mensaje, "success");
+
+      // 1. HACEMOS VISIBLE EL CONTENEDOR DE LA VISTA PREVIA PRIMERO (CRÍTICO)
+      // Esto permite que el QR detecte el tamaño real y no salga en blanco
+      const previewWrapper = document.getElementById('preview-wrapper');
+      if(previewWrapper) previewWrapper.style.display = 'flex';
+
+      // 2. Inyectamos los textos
+      document.getElementById('printNombre').innerText = nom;
+      document.getElementById('printEmpresa').textContent = (emp || "---").toUpperCase();
+
+      // 3. Identificamos el ID real de forma estricta
+      let idParaQR = editId !== "" ? editId : data.id;
+
+      // ALERTA DE SEGURIDAD: Si a pesar de todo no llega ningún ID, frenamos el proceso
+      if (!idParaQR) {
+          mostrarToast("⚠️ Alerta: El registro fue exitoso, pero el servidor no devolvió un ID para el QR. Revisa la consola.", "warning", 5000);
+          console.error("Respuesta completa de la Edge Function:", data);
+          idParaQR = "ERROR-NO-ID"; // Evita usar el nombre de todas formas
+      }
+
+      // 4. Renderizamos el QR con baja densidad (Nivel L)
+      const contenedorQR = document.getElementById("printQR");
+      contenedorQR.innerHTML = "";
+
+      new QRCode(contenedorQR, {
+          text: idParaQR,
+          width: 50,
+          height: 50,
+          correctLevel : QRCode.CorrectLevel.L // Genera un QR limpio y simple de pocos módulos
+      });
+
+      // 5. Restauramos el botón. NO llamamos a limpiarYSalir() para que el
+      // modal siga abierto y el staff pueda usar "🖨️ REIMPRIMIR ETIQUETA"
+      // si la impresión automática falla.
+      btn.innerText = "GUARDAR NUEVO Y MARCAR";
+      btn.disabled = false;
+
+      // 🖨️ Imprime la etiqueta en el momento, sin esperar el clic manual del staff
+      imprimirEtiquetaAuto();
+
+    } else {
+      // Si el servidor responde pero no es un éxito (p. ej. duplicado detectado)
+      mostrarToast(data.mensaje || "Proceso completado.");
+      limpiarYSalir(btn);
+    }
+  }
+
+  // 🧹 LIMPIEZA DE CAMPOS Y ESTADOS
+  function limpiarYSalir(btn) {
+    btn.innerText = "GUARDAR NUEVO Y MARCAR";
+    btn.disabled = false;
+    document.getElementById('edit-id').value = "";
+    document.getElementById('titulo-modal').innerText = "Nuevo Registro / Búsqueda";
+    document.getElementById('nom').value = ""; document.getElementById('ema').value = "";
+    document.getElementById('cel').value = ""; document.getElementById('emp').value = "";
+    document.getElementById('ruc').value = ""; document.getElementById('ruc-status').textContent = "";
+    document.getElementById('lista-coincidencias').innerHTML = "";
+    cerrarRegistro();
+  }
+
+  // Botón "MKT" del selector: supabase-js ya guarda la sesión sola
+  // (localStorage + refresco automático de token) — antes esto mandaba
+  // SIEMPRE a pedir contraseña sin fijarse si ya había sesión válida. Ahora
+  // se revisa primero: si ya hay sesión, entra directo al dashboard.
+  async function entrarPanelMKT() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      irA('screen-dashboard-mkt');
+      cargarMetricasMKT();
+    } else {
+      irA('screen-login-mkt');
+    }
+  }
+
+  // Login del staff MKT: ya no pasa por un endpoint propio — el navegador
+  // llama directo a Supabase Auth (signInWithPassword). El campo solo pide
+  // contraseña, igual que hoy; el email de la cuenta compartida está fijo
+  // en EMAIL_MKT_COMPARTIDO (no es secreto, solo un identificador de cuenta).
+  async function validarLoginMKT(btn) {
+    const pass = document.getElementById('pass-mkt').value;
+    if (!pass) return mostrarToast("⚠️ Ingresa la contraseña.", "warning");
+    if (btn) { btn.disabled = true; btn.innerText = "VERIFICANDO..."; }
+
+    const { error } = await sb.auth.signInWithPassword({ email: EMAIL_MKT_COMPARTIDO, password: pass });
+    if (btn) { btn.disabled = false; btn.innerText = "ACCEDER AL DASHBOARD"; }
+    if (error) return mostrarToast("❌ Contraseña incorrecta.", "danger");
+    document.getElementById('pass-mkt').value = "";
+    irA('screen-dashboard-mkt');
+    cargarMetricasMKT();
+  }
+
+  async function cerrarSesionMKT() {
+    await sb.auth.signOut();
+    irA('screen-selector');
+  }
+
+  async function cargarMetricasMKT() {
+    const contenedorStands = document.getElementById('mkt-ranking-stands');
+
+    // 1. Mostrar estado de carga visual para el Staff
+    contenedorStands.innerHTML = "<p style='text-align:center;'>Calculando métricas globales en vivo...</p>";
+    document.getElementById('mkt-total-asistentes').innerText = "...";
+    document.getElementById('mkt-total-sorteo').innerText = "...";
+    document.getElementById('mkt-total-inscritos').innerText = "...";
+
+    // Si tienes un elemento en tu HTML para mostrar los que ya ingresaron, lo ponemos a cargar:
+    const uiIngresados = document.getElementById('mkt-ingresados-puerta');
+    if (uiIngresados) uiIngresados.innerText = "...";
+
+    // 2. LLAMADA A MÉTRICAS (Total, Ingresos, Aptos y Ranking)
+    const { data, error } = await sb.rpc('obtener_metricas_mkt');
+    if (error) { contenedorStands.innerHTML = "<p style='color:var(--danger); text-align:center; font-size:13px;'>Error al cargar métricas.</p>"; return; }
+    if (!sesionValida(data)) return;
+    if (!data.success) return;
+
+    // Pintamos los números principales con una cuenta ascendente animada
+    animarContador('mkt-total-asistentes', data.ingresados);
+    animarContador('mkt-total-sorteo', data.aptos);
+    animarContador('mkt-total-inscritos', data.total);
+    if (uiIngresados) uiIngresados.innerText = data.ingresados; // Pintamos la nueva métrica
+
+    // Pintamos el ranking de stands; el relleno se anima vía transform (no width)
+    // para no forzar layout, con un pequeño stagger por fila.
+    contenedorStands.innerHTML = data.ranking.map((stand, i) => {
+      // Nota: El porcentaje se calcula en base a "Registrados" (data.total).
+      // Si prefieres que se calcule en base a los que asistieron, cambia "data.total" por "data.ingresados"
+      let porcentaje = data.total > 0 ? Math.round((stand.visitas / data.total) * 100) : 0;
+      return `
+        <div style="margin-bottom: 14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; margin-bottom:6px; font-weight:600; color:var(--ink);">
+            <span style="display:flex; align-items:center; gap:8px;"><span class="rank-avatar">${i + 1}</span>${stand.nombre}</span><span>${stand.visitas} · ${porcentaje}%</span>
+          </div>
+          <div class="rank-bar-track">
+            <div class="rank-bar-fill" data-objetivo="${porcentaje}"></div>
+          </div>
+        </div>`;
+    }).join('');
+
+    requestAnimationFrame(() => {
+      document.querySelectorAll('#mkt-ranking-stands .rank-bar-fill').forEach((el, i) => {
+        el.style.transitionDelay = `${i * 60}ms`;
+        el.style.transform = `scaleX(${(Number(el.dataset.objetivo) || 0) / 100})`;
+      });
+    });
+    // Nota: la lista de asistentes (con PII) YA NO se carga aquí automáticamente.
+    // Se pide solo bajo demanda: al abrir el Buscador o al abrir Registro Manual.
+  }
+
+// 1. Variable global para guardar el "molde" original de la sección
+  let estadoOriginalModal = "";
+
+  // 2. Tomamos la fotografía apenas carga la página web (antes de generar cualquier etiqueta)
+  window.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('modal-manual');
+    if (modal) {
+      estadoOriginalModal = modal.innerHTML;
+    }
+  });
+
+  // 3. La función que se activa al presionar el botón
+  function refrescarPanelManual() {
+    const modal = document.getElementById('modal-manual');
+    
+    // RESTAURACIÓN MÁGICA: Reemplazamos todo lo que haya por el molde limpio original.
+    // Esto destruye la etiqueta generada sin romper la estructura que el generador necesita.
+    if (estadoOriginalModal !== "") {
+      modal.innerHTML = estadoOriginalModal;
+    }
+    sincronizarChecklistAutoPrint();
+
+    // Por seguridad extra, nos aseguramos de que las cajas de texto nazcan vacías
+    if (document.getElementById('nom')) document.getElementById('nom').value = '';
+    if (document.getElementById('ema')) document.getElementById('ema').value = '';
+    if (document.getElementById('cel')) document.getElementById('cel').value = '';
+    if (document.getElementById('emp')) document.getElementById('emp').value = '';
+    if (document.getElementById('ruc')) document.getElementById('ruc').value = '';
+    if (document.getElementById('ruc-status')) document.getElementById('ruc-status').textContent = '';
+    if (document.getElementById('edit-id')) document.getElementById('edit-id').value = '';
+    
+    // Si tienes una caja donde salen las coincidencias de búsqueda, la limpiamos también
+    if (document.getElementById('lista-coincidencias')) {
+      document.getElementById('lista-coincidencias').innerHTML = '';
+    }
+  }
+
+
+  // ==============================================
+  // 📊 LÓGICA AGREGADA: BUSCADOR MKT EN TIEMPO REAL
+  // ==============================================
+  let todosLosAsistentesMKT = [];
+
+  // Se llama solo al tocar "🔎 Buscar Asistentes" en el dashboard — antes se disparaba
+  // automáticamente en cada refresh de métricas, cargando PII de todos los asistentes
+  // sin necesidad. Ahora es 100% bajo demanda.
+  function abrirBuscadorMKT() {
+    irA('screen-buscador-mkt');
+    inicializarBuscadorMKT();
+  }
+
+  async function inicializarBuscadorMKT() {
+    const contenedor = document.getElementById('mkt-lista-busqueda');
+    contenedor.innerHTML = "<p style='text-align:center; font-size:12px; color:var(--gray);'>Cargando lista de búsqueda...</p>";
+
+    const { data, error } = await sb.rpc('obtener_lista_asistentes_mkt');
+    if (error) { contenedor.innerHTML = "<p style='color:var(--danger); text-align:center; font-size:13px;'>Error al cargar buscador.</p>"; return; }
+    if (!sesionValida(data)) return;
+    if (data.success) {
+      todosLosAsistentesMKT = data.asistentes;
+      MAX_STANDS = data.maxStands || MAX_STANDS;
+      // Re-aplicamos el filtro actual del input en vez de pintar la lista
+      // completa: si el staff ya empezó a escribir mientras esto cargaba,
+      // esto evita que la respuesta tardía tape lo que ya había buscado.
+      filtrarAsistentesMKT();
+    }
+  }
+
+  function renderizarListaFiltradaMKT(lista) {
+    const contenedor = document.getElementById('mkt-lista-busqueda');
+    if(lista.length === 0) {
+      contenedor.innerHTML = "<p style='text-align:center; color:var(--gray); font-size:13px;'>No se encontraron resultados.</p>";
+      return;
+    }
+
+    contenedor.innerHTML = lista.map(asistente => {
+      const completado = asistente.totalStands === MAX_STANDS;
+      return `
+        <div style="padding: 10px 6px; border-bottom: 1px solid var(--gray-line); font-size: 13px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="text-align: left;">
+            <b style="color:var(--ink);">${asistente.nombre}</b> <span style="font-size:11px; color:var(--gray);">(F: ${asistente.empresa})</span><br>
+            <span style="font-size:11px; color:var(--gray); display:inline-flex; align-items:center; gap:8px;"><span style="display:inline-flex; align-items:center; gap:3px;"><svg class="icon" style="width:11px;height:11px;" viewBox="0 0 24 24"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>${asistente.celular}</span><span style="display:inline-flex; align-items:center; gap:3px;"><svg class="icon" style="width:11px;height:11px;" viewBox="0 0 24 24"><path d="M16 10h2"/><path d="M16 14h2"/><path d="M6.17 15a3 3 0 0 1 5.66 0"/><circle cx="9" cy="11" r="2"/><rect x="2" y="5" width="20" height="14" rx="2"/></svg>${asistente.id}</span></span>
+          </div>
+          <div style="text-align: right; min-width: 70px;">
+            <span style="font-weight: bold; color: ${completado ? 'var(--success)' : 'var(--purple)'}">${asistente.totalStands} / ${MAX_STANDS}</span><br>
+            <span onclick="consultarProgresoAsistente('${asistente.id}')" style="font-size: 11px; color: var(--purple); cursor: pointer; text-decoration: underline; font-weight: 600;">Ver detalle</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function filtrarAsistentesMKT() {
+    const termino = document.getElementById('mkt-buscador-input').value.toLowerCase().trim();
+    if(!termino) {
+      renderizarListaFiltradaMKT(todosLosAsistentesMKT);
+      return;
+    }
+
+    // (a.campo || '') en cada campo: si algún registro llega con un dato vacío/
+    // indefinido, .toLowerCase() sobre undefined tronaría el filtro completo en
+    // silencio (sin error visible en la app) y la lista se quedaría congelada.
+    const filtrados = todosLosAsistentesMKT.filter(a =>
+      (a.nombre || '').toLowerCase().includes(termino) ||
+      (a.empresa || '').toLowerCase().includes(termino) ||
+      (a.id || '').toLowerCase().includes(termino) ||
+      (a.ruc || '').toLowerCase().includes(termino)
+    );
+    renderizarListaFiltradaMKT(filtrados);
+  }
+
+function exportarAptosSorteo() {
+    // 1. Validamos que la lista local no esté vacía
+    if (!todosLosAsistentesMKT || todosLosAsistentesMKT.length === 0) {
+      return mostrarToast("⚠️ La lista de asistentes aún no ha cargado o está vacía.", "warning");
+    }
+
+    // 2. Filtramos en la memoria local solo a los que completaron todos los stands (MAX_STANDS)
+    const aptos = todosLosAsistentesMKT.filter(asistente => asistente.totalStands === MAX_STANDS);
+
+    if (aptos.length === 0) {
+      return mostrarToast(`⏳ Por el momento no hay ningún asistente que haya completado los ${MAX_STANDS} stands.`, "info");
+    }
+
+    // 3. Creamos el contenido del archivo CSV con codificación UTF-8 para tildes y caracteres eñe
+    // Usamos punto y coma (;) como separador clásico para que Excel en español lo abra en columnas perfectas
+    let contenidoCsv = "\uFEFF"; // BOM para obligar a Excel a leer correctamente UTF-8
+    contenidoCsv += "Nombre Completo;Empresa\n"; // Encabezados de las columnas
+
+    aptos.forEach(asistente => {
+      // Limpiamos posibles puntos y comas de los nombres de empresas para no romper las celdas
+      const nombreLimpio = asistente.nombre.replace(/;/g, ',');
+      const empresaLimpia = (asistente.empresa || "---").replace(/;/g, ',');
+      
+      contenidoCsv += `${nombreLimpio};${empresaLimpia}\n`;
+    });
+
+    // 4. Creamos un enlace invisible de descarga en el navegador
+    const blob = new Blob([contenidoCsv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const linkDocumento = document.createElement("a");
+    
+    // Formateamos el nombre del archivo con la fecha del evento
+    linkDocumento.setAttribute("href", url);
+    linkDocumento.setAttribute("download", "Aptos_Sorteo_Fiberlux_ISP_2026.csv");
+    linkDocumento.style.visibility = 'hidden';
+    
+    // Disparamos la descarga automática y removemos el elemento
+    document.body.appendChild(linkDocumento);
+    linkDocumento.click();
+    document.body.removeChild(linkDocumento);
+  }
+
+</script>
+
+</body>
+</html>
