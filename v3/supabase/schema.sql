@@ -3,6 +3,13 @@
 -- Pega este archivo COMPLETO en el SQL Editor de un proyecto Supabase
 -- NUEVO (no el de Huancayo/V2) y dale Run.
 --
+-- Proyecto de PRUEBAS (cuenta personal, datos falsos únicamente):
+--   URL:              https://ibdzfmllapcsmqcnycqh.supabase.co
+--   Project Ref ID:   ibdzfmllapcsmqcnycqh
+-- Cuando se valide todo, se crea un proyecto NUEVO en la cuenta real de
+-- Fiberlux y se corre este mismo archivo ahí — no se migra este proyecto
+-- de pruebas, para no arrastrar datos falsos al evento real.
+--
 -- Diferencias clave respecto al schema de V2:
 --   - Nada de PIN: los stands y sponsors se identifican por un `codigo`
 --     propio en la URL (/stand/:codigo, /sponsor/:codigo), igual que el
