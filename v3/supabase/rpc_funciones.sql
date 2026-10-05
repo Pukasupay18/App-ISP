@@ -417,17 +417,20 @@ begin
   from public.attendees where asistencia_at is not null;
 
   select coalesce(jsonb_agg(jsonb_build_object(
-           'nombre', a.nombre,
-           'empresa', coalesce(a.empresa, '---'),
-           'nota', sv.nota,
-           'visitedAt', sv.visited_at
-         ) order by sv.visited_at desc), '[]'::jsonb)
+           'nombre', t.nombre,
+           'empresa', t.empresa,
+           'nota', t.nota,
+           'visitedAt', t.visited_at
+         ) order by t.visited_at desc), '[]'::jsonb)
     into v_ultimos
-  from public.stand_visits sv
-  join public.attendees a on a.id = sv.attendee_id
-  where sv.stand_id = v_stand.id
-  order by sv.visited_at desc
-  limit 10;
+  from (
+    select a.nombre, coalesce(a.empresa, '---') as empresa, sv.nota, sv.visited_at
+    from public.stand_visits sv
+    join public.attendees a on a.id = sv.attendee_id
+    where sv.stand_id = v_stand.id
+    order by sv.visited_at desc
+    limit 10
+  ) t;
 
   return jsonb_build_object(
     'success', true,
