@@ -57,6 +57,14 @@ select cron.schedule(
     url := 'https://<TU-PROJECT-REF>.supabase.co/functions/v1/sincronizar-inscripciones',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
+      -- La pasarela de Edge Functions exige AMBOS headers con la key —
+      -- "apikey" para identificarla, "Authorization" para el modo "secret"
+      -- de @supabase/server. Con solo uno de los dos, responde
+      -- UNUSABLE_CREDENTIAL aunque la key en sí sea correcta.
+      'apikey', (
+        select decrypted_secret from vault.decrypted_secrets
+        where name = 'sincronizar_inscripciones_key'
+      ),
       'Authorization', 'Bearer ' || (
         select decrypted_secret from vault.decrypted_secrets
         where name = 'sincronizar_inscripciones_key'
