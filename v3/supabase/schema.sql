@@ -99,16 +99,26 @@ create policy "staff MKT edita config"
 -- `codigo` reemplaza al PIN: es el token de acceso de /stand/:codigo,
 -- no es secreto compartido de palabra, es el link que Marketing entrega
 -- una vez a cada stand. `codigo_sponsor` es un segundo código, aparte,
--- para /sponsor/:codigo — solo se usa si el stand es tier Premium.
--- El tier se deriva de esta tabla (lookup real), nunca hardcodeado en
--- el frontend — regla no negociable del brief.
+-- para /sponsor/:codigo — solo tiene efecto si `panel_sponsor` está
+-- activo para ese stand.
+--
+-- `tier` guarda el nivel comercial REAL del patrocinio (Diamante/Oro/
+-- Complementario — no el Premium/Básico binario del brief original, el
+-- negocio real tiene 3 niveles). `panel_sponsor` es un flag APARTE que
+-- controla el acceso al Panel Sponsor: no se deriva automáticamente del
+-- tier (eso acoplaría la lógica de acceso a un nombre comercial que
+-- puede cambiar), Marketing lo prende/apaga por stand desde el panel Mkt
+-- — el botón "Panel" del frontend lee ESTE flag, nunca el tier directo.
+-- Ambos valores salen siempre de esta tabla (lookup real), nunca
+-- hardcodeados en el frontend — regla no negociable del brief.
 -- ---------------------------------------------------------------------
 create table public.stands (
   id             uuid primary key default gen_random_uuid(),
   nombre         text not null,
   codigo         text not null unique,
   codigo_sponsor text unique,
-  tier           text not null default 'basico' check (tier in ('premium', 'basico')),
+  tier           text not null check (tier in ('diamante', 'oro', 'complementario')),
+  panel_sponsor  boolean not null default false,
   activo         boolean not null default true,
   orden          int not null,
   created_at     timestamptz not null default now()
