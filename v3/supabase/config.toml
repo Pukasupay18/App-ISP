@@ -1,0 +1,8 @@
+# Cada Edge Function real del proyecto agrega aquí su propio bloque
+# [functions.<nombre>] al crearse con `supabase functions new <nombre>`.
+
+[functions.sincronizar-inscripciones]
+enabled = true
+verify_jwt = false
+import_map = "./functions/sincronizar-inscripciones/deno.json"
+entrypoint = "./functions/sincronizar-inscripciones/index.ts"
