@@ -232,7 +232,7 @@ as $$
 declare
   v_stand record;
 begin
-  select id, nombre, tier, panel_sponsor into v_stand
+  select id, nombre, tier, panel_sponsor, codigo_sponsor into v_stand
   from public.stands where codigo = p_codigo and activo;
 
   if not found then
@@ -244,7 +244,11 @@ begin
     'standId', v_stand.id,
     'nombre', v_stand.nombre,
     'tier', v_stand.tier,
-    'panelSponsor', v_stand.panel_sponsor
+    'panelSponsor', v_stand.panel_sponsor,
+    -- Solo se expone si el panel está activo — es lo que arma el botón
+    -- "Panel" del brief 4.2 (link directo desde la pantalla del stand,
+    -- sin que la persona tenga que teclear un segundo código a mano).
+    'codigoSponsor', case when v_stand.panel_sponsor then v_stand.codigo_sponsor else null end
   );
 end;
 $$;
