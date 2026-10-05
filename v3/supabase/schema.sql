@@ -244,6 +244,11 @@ create policy "staff MKT lee boletos extra"
 grant usage on schema public to service_role, authenticated, anon;
 
 grant select, insert on public.attendees to service_role;
+-- sincronizar-inscripciones lee registro_abierto/ultima_sincronizacion y
+-- escribe ultima_sincronizacion en cada corrida (ver el cooldown de 30s
+-- en su código) — sin este grant, ctx.supabaseAdmin choca con 42501
+-- aunque service_role se salte RLS: GRANT es una capa aparte de RLS.
+grant select, update on public.event_config to service_role;
 
 grant select, insert, update on public.attendees      to authenticated;
 grant select, insert           on public.stand_visits  to authenticated;
