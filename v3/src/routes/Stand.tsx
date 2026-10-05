@@ -69,9 +69,12 @@ export default function Stand() {
     const scanner = new Html5Qrcode(readerId);
     scannerRef.current = scanner;
     scanner
-      .start({ facingMode: "environment" }, { fps: 12, qrbox: { width: 260, height: 260 } }, (texto) => {
-        procesarEscaneo(texto.toUpperCase().trim());
-      })
+      .start(
+        { facingMode: "environment" },
+        { fps: 12, qrbox: { width: 260, height: 260 } },
+        (texto) => { procesarEscaneo(texto.toUpperCase().trim()); },
+        () => { /* callback de "no se detectó QR en este frame" — se ignora, es ruido normal mientras escanea */ },
+      )
       .catch(() => setError("No se pudo acceder a la cámara. Revisa los permisos del navegador."));
 
     return () => {

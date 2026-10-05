@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { sbPublic } from "../lib/supabaseClient";
 
@@ -154,7 +154,7 @@ export default function Pase() {
   );
 }
 
-function CentroMensaje({ children, tono }: { children: React.ReactNode; tono?: "danger" }) {
+function CentroMensaje({ children, tono }: { children: ReactNode; tono?: "danger" }) {
   return (
     <div className="flex min-h-screen items-center justify-center px-6 text-center">
       <p className={tono === "danger" ? "text-danger" : "text-gray"}>{children}</p>
