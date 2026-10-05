@@ -169,7 +169,14 @@ export default function Attendees() {
                 <div className="success-badge"><Check size={20} /></div>
                 <p>El asistente fue guardado correctamente.</p>
                 <div className="print-label">
-                  <QRCodeSVG value={guardado.id} size={88} level="L" />
+                  {/* El QR codifica el link completo a /pase/:id, no solo el
+                      código — así, cuando el propio asistente escanea su
+                      gafete con la cámara nativa del teléfono, va directo a
+                      su pase, sin pasar por la pantalla de "ingresa tu
+                      código". El escáner de stand (Stand.tsx) acepta ambos
+                      formatos, por si alguna vez hay un QR con el código
+                      plano. */}
+                  <QRCodeSVG value={`${window.location.origin}/#/pase/${guardado.id}`} size={88} level="L" />
                   <div>
                     <strong>{guardado.nombre}</strong>
                     <span>{guardado.empresa}</span>

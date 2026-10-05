@@ -3,6 +3,17 @@ import { Link, useParams } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
 import { sbPublic } from "../lib/supabaseClient";
 
+// El QR del gafete codifica el link completo (".../#/pase/CQ0427FX"), no
+// solo el código — así el propio asistente, al escanear su gafete con la
+// cámara nativa, va directo a su pase. Esta función acepta ese formato Y
+// el código plano (por si queda algún QR viejo o alguien escribe el
+// código a mano en otro flujo), siempre devolviendo solo el código.
+function extraerCodigoAsistente(textoEscaneado: string): string {
+  const limpio = textoEscaneado.trim();
+  const match = limpio.match(/\/pase\/([A-Za-z0-9]+)/);
+  return (match ? match[1] : limpio).toUpperCase();
+}
+
 type StandInfo = {
   standId: string;
   nombre: string;
@@ -72,7 +83,7 @@ export default function Stand() {
       .start(
         { facingMode: "environment" },
         { fps: 12, qrbox: { width: 260, height: 260 } },
-        (texto) => { procesarEscaneo(texto.toUpperCase().trim()); },
+        (texto) => { procesarEscaneo(extraerCodigoAsistente(texto)); },
         () => { /* callback de "no se detectó QR en este frame" — se ignora, es ruido normal mientras escanea */ },
       )
       .catch(() => setError("No se pudo acceder a la cámara. Revisa los permisos del navegador."));

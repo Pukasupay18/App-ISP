@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
+import { ExternalLink, Facebook, Instagram, Linkedin, Megaphone, Star } from "lucide-react";
 import { sbPublic } from "../lib/supabaseClient";
 
 type PaseData = {
@@ -14,11 +15,14 @@ type PaseData = {
   boletosExtraHechos: string[];
 };
 
-const ACCIONES_BOLETO: { tipo: string; label: string }[] = [
-  { tipo: "red_social", label: "Seguir redes sociales" },
-  { tipo: "canal", label: "Unirse al canal de difusión" },
-  { tipo: "resena", label: "Dejar una reseña" },
+const REDES_SOCIALES = [
+  { nombre: "Facebook", icon: Facebook, url: "https://www.facebook.com/p/Fiberlux-ISP-61590764393700/" },
+  { nombre: "Instagram", icon: Instagram, url: "https://www.instagram.com/fiberluxisp/" },
+  { nombre: "LinkedIn", icon: Linkedin, url: "https://www.linkedin.com/company/fiberlux-isp/" },
+  { nombre: "TikTok", icon: ExternalLink, url: "https://www.tiktok.com/@fiberlux.isp" },
 ];
+const CANAL_WHATSAPP = "https://whatsapp.com/channel/0029VbDLDQT0bIdoli8lXy0v";
+const RESENA_MAPS = "https://maps.app.goo.gl/pEQcWQDMJLGC43m56";
 
 export default function Pase() {
   const { codigo } = useParams<{ codigo: string }>();
@@ -62,6 +66,15 @@ export default function Pase() {
     if (!codigo) return;
     const { data: res } = await sbPublic.rpc("registrar_boleto_extra", { p_id: codigo, p_tipo: tipo });
     if (res?.success) cargarPase();
+  }
+
+  // Abre el link real (red social / canal / reseña) en una pestaña nueva Y
+  // de paso marca el boleto — una sola acción para la persona, no dos
+  // pasos separados. Idempotente del lado del servidor (PK compuesta en
+  // boletos_extra), así que no pasa nada si ya estaba hecho.
+  function abrirYRegistrar(url: string, tipo: string) {
+    window.open(url, "_blank", "noopener,noreferrer");
+    registrarBoleto(tipo);
   }
 
   async function participar() {
@@ -118,22 +131,48 @@ export default function Pase() {
       )}
 
       <div className="mt-4 rounded-content bg-card p-5 shadow">
-        <h2 className="mb-3 text-sm font-bold">Suma boletos</h2>
-        <div className="space-y-2">
-          {ACCIONES_BOLETO.map((a) => {
-            const hecho = data.boletosExtraHechos.includes(a.tipo);
-            return (
-              <button
-                key={a.tipo}
-                disabled={hecho}
-                onClick={() => registrarBoleto(a.tipo)}
-                className="flex w-full items-center justify-between rounded-input border border-gray-line px-4 py-3 text-left text-sm disabled:opacity-50"
-              >
-                <span>{a.label}</span>
-                <span>{hecho ? "✅" : "+1"}</span>
-              </button>
-            );
-          })}
+        <h2 className="text-sm font-bold">Suma boletos</h2>
+        <p className="mt-1 text-xs text-gray">
+          Cada acción te da 1 boleto para el sorteo. Tócala para abrir el link — queda registrada al instante, no hace falta volver aquí a confirmar.
+        </p>
+
+        <div className="mt-3 space-y-2">
+          {/* Redes sociales: un solo boleto cubre las 4 plataformas — tocar
+              cualquiera abre esa red y marca la acción como hecha. */}
+          <div className="rounded-input border border-gray-line px-4 py-3">
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <span>Seguir redes sociales</span>
+              <span>{data.boletosExtraHechos.includes("red_social") ? "✅" : "+1"}</span>
+            </div>
+            <div className="flex gap-2">
+              {REDES_SOCIALES.map((r) => (
+                <button
+                  key={r.nombre}
+                  onClick={() => abrirYRegistrar(r.url, "red_social")}
+                  aria-label={r.nombre}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-purple/10 text-purple"
+                >
+                  <r.icon size={18} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={() => abrirYRegistrar(CANAL_WHATSAPP, "canal")}
+            className="flex w-full items-center justify-between rounded-input border border-gray-line px-4 py-3 text-left text-sm"
+          >
+            <span className="flex items-center gap-2"><Megaphone size={16} /> Unirse al canal de difusión</span>
+            <span>{data.boletosExtraHechos.includes("canal") ? "✅" : "+1"}</span>
+          </button>
+
+          <button
+            onClick={() => abrirYRegistrar(RESENA_MAPS, "resena")}
+            className="flex w-full items-center justify-between rounded-input border border-gray-line px-4 py-3 text-left text-sm"
+          >
+            <span className="flex items-center gap-2"><Star size={16} /> Dejar una reseña</span>
+            <span>{data.boletosExtraHechos.includes("resena") ? "✅" : "+1"}</span>
+          </button>
         </div>
       </div>
 

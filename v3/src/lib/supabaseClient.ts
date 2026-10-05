@@ -11,7 +11,11 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 // refresh de token corriendo de fondo sin necesidad (ver discusión de
 // optimización de free tier).
 export const sbPublic = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
+  // storageKey propio aparte de evitar el warning de "Multiple GoTrueClient
+  // instances" en consola (dos createClient() del mismo proyecto sin esto
+  // comparten la misma llave de localStorage por defecto) — no afecta
+  // comportamiento ya que persistSession está en false de todos modos.
+  auth: { persistSession: false, autoRefreshToken: false, storageKey: "sb-public-auth" },
 });
 
 // `sbMkt` — /mkt, el único rol con login real (Supabase Auth). Sesión
