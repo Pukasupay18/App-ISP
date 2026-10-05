@@ -3,12 +3,19 @@
 -- Pega este archivo COMPLETO en el SQL Editor de un proyecto Supabase
 -- NUEVO (no el de Huancayo/V2) y dale Run.
 --
--- Proyecto de PRUEBAS (cuenta personal, datos falsos únicamente):
---   URL:              https://ibdzfmllapcsmqcnycqh.supabase.co
---   Project Ref ID:   ibdzfmllapcsmqcnycqh
--- Cuando se valide todo, se crea un proyecto NUEVO en la cuenta real de
--- Fiberlux y se corre este mismo archivo ahí — no se migra este proyecto
--- de pruebas, para no arrastrar datos falsos al evento real.
+-- Proyecto REAL (cuenta mkt.fiberlux@gmail.com, datos reales de Arequipa):
+--   URL:              https://hjdxrdptvlafjhtvdigp.supabase.co
+--   Project Ref ID:   hjdxrdptvlafjhtvdigp
+-- Vacío por ahora — se corre este archivo ahí directamente, sin pasos
+-- intermedios. (El proyecto ibdzfmllapcsmqcnycqh de la cuenta personal
+-- quedó descartado como entorno de pruebas; todo va directo aquí.)
+--
+-- Fuente real de inscritos (origen = 'sync_sheet'):
+--   "BBDD Arequipa ISP" — https://docs.google.com/spreadsheets/d/1OYoty1hxAsGUlMSTHfsBeLbc2lNALFJj4sJLbYTbjdM
+--   Pestaña "Hoja 1". Columnas: Nombre, correo, empresa, cargo, ruc,
+--   telefono, utm, date — cargo/utm/date no se guardan (sin campo para
+--   ellos en `attendees`, sin uso en la app). Ver
+--   v3/supabase/functions/sincronizar-inscripciones/ y v3/supabase/cron.sql.
 --
 -- Diferencias clave respecto al schema de V2:
 --   - Nada de PIN: los stands y sponsors se identifican por un `codigo`
