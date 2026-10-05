@@ -104,7 +104,7 @@ export default function Attendees() {
               <span>Boletos</span>
               <strong className="mono">{persona.boletosTotal}</strong>
             </div>
-            <div className="person-meta entered">
+            <div className={`person-meta ${persona.ingresado ? "entered" : "pending"}`}>
               <span>Estado</span>
               <strong>{persona.ingresado ? "Ingresó" : "Pendiente"}</strong>
             </div>

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
+import { HashRouter, Route, Routes } from "react-router-dom";
 import { sbMkt } from "./lib/supabaseClient";
+import Selector from "./routes/Selector";
 import Pase from "./routes/Pase";
 import Stand from "./routes/Stand";
 import Sponsor from "./routes/Sponsor";
@@ -28,11 +29,12 @@ export default function App() {
   return (
     <HashRouter>
       <Routes>
+        <Route path="/" element={<Selector />} />
         <Route path="/pase/:codigo" element={<Pase />} />
         <Route path="/stand/:codigo" element={<Stand />} />
         <Route path="/sponsor/:codigo" element={<Sponsor />} />
         <Route path="/mkt" element={<Mkt />} />
-        <Route path="*" element={<Navigate to="/mkt" replace />} />
+        <Route path="*" element={<Selector />} />
       </Routes>
     </HashRouter>
   );
