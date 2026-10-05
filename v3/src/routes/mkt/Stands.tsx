@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Check, Copy, RefreshCw } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { sbMkt } from "../../lib/supabaseClient";
-import { Button, SectionTitle, Toggle, TierBadge } from "./shared";
+import { RefreshButton, SectionTitle, Toggle, TierBadge } from "./shared";
 import type { StandRow } from "./types";
 
 export default function Stands() {
@@ -38,7 +38,7 @@ export default function Stands() {
       <SectionTitle
         title="Stands del evento"
         subtitle="Administra la visibilidad y accesos de los espacios participantes."
-        action={<Button variant="secondary" onClick={cargar}><RefreshCw size={17} /> Actualizar</Button>}
+        action={<RefreshButton cargando={cargando} onClick={cargar} />}
       />
 
       <div className="inline-stats">
@@ -78,7 +78,7 @@ export default function Stands() {
               </div>
               <div className="stand-controls">
                 <div>
-                  <span>Panel sponsor</span>
+                  <span>Panel sponsor <i className="stand-control-hint" title="Habilita el link /sponsor/:codigo con KPIs de la marca (visitas, % de asistentes, últimos visitantes).">?</i></span>
                   <Toggle checked={stand.panel_sponsor} onChange={() => actualizar(stand.id, "panel_sponsor", !stand.panel_sponsor)} label="Panel sponsor" />
                 </div>
                 <div>

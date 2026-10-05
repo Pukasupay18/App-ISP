@@ -23,8 +23,8 @@ export default function Overview({
           <h2>Resumen del evento</h2>
           <span>Registro {metricas.registroAbierto ? "abierto" : "cerrado"} · Sorteo {metricas.sorteoAbierto ? "abierto" : "cerrado"}</span>
         </div>
-        <button className="icon-button" onClick={recargar} aria-label="Actualizar">
-          <RefreshCw size={17} />
+        <button className="icon-button" onClick={recargar} disabled={cargando} aria-label="Actualizar">
+          <RefreshCw size={17} className={cargando ? "spin" : ""} />
         </button>
       </div>
 

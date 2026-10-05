@@ -77,7 +77,7 @@ export default function Mkt() {
             {view === "resumen" && <Overview metricas={metricas} cargando={cargandoMetricas} recargar={cargarMetricas} goTo={setView} />}
             {view === "asistentes" && <Attendees />}
             {view === "stands" && <Stands />}
-            {view === "ranking" && <Ranking metricas={metricas} recargar={cargarMetricas} />}
+            {view === "ranking" && <Ranking metricas={metricas} cargando={cargandoMetricas} recargar={cargarMetricas} />}
             {view === "sorteo" && <Sorteo aptos={metricas?.aptos ?? 0} />}
             {view === "configuracion" && <Configuracion />}
           </div>

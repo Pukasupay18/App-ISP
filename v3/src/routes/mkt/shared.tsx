@@ -1,4 +1,5 @@
-import type { ElementType, ReactNode } from "react";
+import { useEffect, useRef, useState, type ElementType, type ReactNode } from "react";
+import { Check, RefreshCw } from "lucide-react";
 
 export function Button({
   children, variant = "primary", className = "", onClick, disabled = false, type = "button",
@@ -61,6 +62,35 @@ export function TierBadge({ tier }: { tier: string }) {
       {esDiamante && "✦ "}
       {tier[0].toUpperCase() + tier.slice(1)}
     </span>
+  );
+}
+
+// Botón "Actualizar" con feedback real: gira mientras carga, y al
+// terminar muestra "Actualizado ✓" un par de segundos — sin esto no hay
+// forma de saber si el clic realmente trajo datos nuevos o no pasó nada.
+export function RefreshButton({ cargando, onClick }: { cargando: boolean; onClick: () => void }) {
+  const [recienActualizado, setRecienActualizado] = useState(false);
+  const eraCargando = useRef(false);
+
+  useEffect(() => {
+    if (eraCargando.current && !cargando) {
+      setRecienActualizado(true);
+      const t = setTimeout(() => setRecienActualizado(false), 2000);
+      return () => clearTimeout(t);
+    }
+    eraCargando.current = cargando;
+  }, [cargando]);
+
+  return (
+    <Button variant="secondary" onClick={onClick} disabled={cargando}>
+      {cargando ? (
+        <><RefreshCw size={17} className="spin" /> Actualizando…</>
+      ) : recienActualizado ? (
+        <><Check size={17} /> Actualizado</>
+      ) : (
+        <><RefreshCw size={17} /> Actualizar</>
+      )}
+    </Button>
   );
 }
 

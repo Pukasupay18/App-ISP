@@ -1,5 +1,5 @@
 import {
-  BarChart3, CircleHelp, Gift, LayoutDashboard, Menu, MoreHorizontal, Settings, Store, TicketCheck, Users, X,
+  BarChart3, Gift, LayoutDashboard, Menu, MoreHorizontal, Settings, Store, TicketCheck, Users, X,
   type LucideIcon,
 } from "lucide-react";
 import type { View } from "./types";
@@ -28,9 +28,6 @@ export function Topbar({ view, onMenu }: { view: View; onMenu: () => void }) {
         <div className="event-status">
           <span /> Evento en curso
         </div>
-        <button className="icon-button desktop-only" aria-label="Ayuda">
-          <CircleHelp size={20} />
-        </button>
       </div>
     </header>
   );

@@ -1,8 +1,9 @@
-import { RefreshCw } from "lucide-react";
-import { Button, SectionTitle, TierBadge, minutosDesde } from "./shared";
+import { RefreshButton, SectionTitle, TierBadge, minutosDesde } from "./shared";
 import type { Metricas } from "./types";
 
-export default function Ranking({ metricas, recargar }: { metricas: Metricas | null; recargar: () => void }) {
+export default function Ranking({
+  metricas, cargando, recargar,
+}: { metricas: Metricas | null; cargando: boolean; recargar: () => void }) {
   if (!metricas) return <div className="empty-state">Cargando…</div>;
 
   const ordenado = [...metricas.ranking].sort((a, b) => b.visitas - a.visitas);
@@ -17,7 +18,7 @@ export default function Ranking({ metricas, recargar }: { metricas: Metricas | n
       <SectionTitle
         title="Ranking de stands"
         subtitle="Rendimiento por cantidad de visitas registradas — uso interno, nunca se expone al público."
-        action={<Button variant="secondary" onClick={recargar}><RefreshCw size={17} /> Actualizar</Button>}
+        action={<RefreshButton cargando={cargando} onClick={recargar} />}
       />
 
       <div className="ranking-summary">
