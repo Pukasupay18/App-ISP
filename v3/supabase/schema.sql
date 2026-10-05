@@ -70,6 +70,12 @@ create table public.event_config (
   sorteo_abierto     boolean not null default false,
   umbral_boletos     int not null default 5,
   cronograma_sheet_url text,
+  -- Cooldown de sincronizar-inscripciones: evita que el cron (cada 5 min)
+  -- y el botón "Sincronizar ahora" del panel Mkt se pisen entre sí, o que
+  -- dos clics seguidos (o dos miembros de staff casi al mismo tiempo)
+  -- disparen dos lecturas del Sheet de golpe. Se actualiza al final de
+  -- cada corrida exitosa de esa función — ver su código para el chequeo.
+  ultima_sincronizacion timestamptz,
   updated_at         timestamptz not null default now(),
   constraint una_sola_fila check (id = 1)
 );

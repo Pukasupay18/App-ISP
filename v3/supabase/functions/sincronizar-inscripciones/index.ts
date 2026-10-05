@@ -96,7 +96,7 @@ export default {
 
     const { data: config, error: configError } = await ctx.supabaseAdmin
       .from("event_config")
-      .select("registro_abierto")
+      .select("registro_abierto, ultima_sincronizacion")
       .eq("id", 1)
       .maybeSingle();
 
@@ -110,6 +110,38 @@ export default {
         success: true, nuevos: 0,
         mensaje: "ℹ️ El registro está cerrado (event_config.registro_abierto = false) — no se importó nada.",
       });
+    }
+
+    // Cooldown de 30s: protege contra el botón "Sincronizar ahora" del
+    // panel Mkt pulsado dos veces seguidas (o por dos miembros de staff
+    // casi al mismo tiempo) y contra que se pise con el cron de 5 min.
+    // No distingue modo "user"/"secret" a propósito — da igual quién
+    // dispare, lo que importa es no leer el Sheet dos veces en 30s.
+    const COOLDOWN_MS = 30_000;
+    if (config?.ultima_sincronizacion) {
+      const msDesdeUltima = Date.now() - new Date(config.ultima_sincronizacion).getTime();
+      if (msDesdeUltima < COOLDOWN_MS) {
+        const segundosFaltantes = Math.ceil((COOLDOWN_MS - msDesdeUltima) / 1000);
+        return Response.json({
+          success: true, nuevos: 0,
+          mensaje: `⏳ Ya se sincronizó hace instantes — espera ${segundosFaltantes}s antes de volver a intentar.`,
+        });
+      }
+    }
+
+    // Se marca el cooldown ANTES de leer el Sheet, no después: así una
+    // segunda llamada que llegue mientras esta sigue en curso (dos clics
+    // casi simultáneos) ve el cooldown activo de inmediato, en vez de
+    // colarse por la ventana entre "empezar" y "terminar".
+    const { error: cooldownError } = await ctx.supabaseAdmin
+      .from("event_config")
+      .update({ ultima_sincronizacion: new Date().toISOString() })
+      .eq("id", 1);
+    if (cooldownError) {
+      console.error("sincronizar-inscripciones (set cooldown):", cooldownError);
+      // No es fatal — si falla solo el marcado del cooldown, seguimos con
+      // la sincronización igual; en el peor caso se pierde la protección
+      // de esta corrida puntual, no la sincronización en sí.
     }
 
     try {
