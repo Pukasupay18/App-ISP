@@ -348,9 +348,13 @@ grant execute on function public.anotar_visita_stand(text, text, text) to anon, 
 -- Pendiente (fuera de esta función, requiere decisión aparte): "staff
 -- activo" del brief 4.3 no se calcula aquí — no hay sesiones de staff
 -- por stand en este modelo (solo el código de acceso), así que esa
--- métrica queda sin dato real por ahora. Tampoco se implementa el envío
--- asíncrono de XLS al correo (requiere elegir proveedor de email, p.ej.
--- Resend) — ese botón queda pendiente de una function aparte.
+-- métrica queda sin dato real por ahora.
+--
+-- Decisión tomada (no pendiente): el envío de la base de datos propia
+-- del sponsor por correo (brief 4.3) NO se construye — Marketing lo
+-- envía a mano post-evento con los datos de obtener_panel_sponsor /
+-- obtener_lista_asistentes_mkt. No hay botón "Solicitar base de datos"
+-- en el panel sponsor, ni función de email.
 -- ---------------------------------------------------------------------
 create or replace function public.resolver_sponsor(p_codigo_sponsor text)
 returns jsonb
