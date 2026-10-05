@@ -192,6 +192,10 @@ create table public.stand_visits (
   attendee_id text not null references public.attendees (id) on delete cascade,
   stand_id    uuid not null references public.stands (id),
   visited_at  timestamptz not null default now(),
+  -- Nota comercial opcional que el stand puede dejar al escanear (brief
+  -- 4.2: "campo de nota comercial opcional"). Se setea con una segunda
+  -- llamada (anotar_visita_stand), no en el mismo insert del escaneo.
+  nota        text,
   primary key (attendee_id, stand_id)
 );
 create index idx_stand_visits_stand on public.stand_visits (stand_id);
