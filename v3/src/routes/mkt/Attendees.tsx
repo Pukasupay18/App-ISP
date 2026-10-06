@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Building2, Check, ChevronRight, Edit3, Plus, RefreshCw, Search, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Building2, Check, ChevronRight, Edit3, Loader2, Plus, RefreshCw, Search, X } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { sbMkt } from "../../lib/supabaseClient";
 import { Button, SectionTitle } from "./shared";
@@ -14,6 +14,11 @@ export default function Attendees() {
   const [autoPrint, setAutoPrint] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [errorForm, setErrorForm] = useState<string | null>(null);
+
+  const rucRef = useRef<HTMLInputElement>(null);
+  const empresaRef = useRef<HTMLInputElement>(null);
+  const [consultandoRuc, setConsultandoRuc] = useState(false);
+  const [rucMensaje, setRucMensaje] = useState<string | null>(null);
 
   async function cargar() {
     setCargando(true);
@@ -64,7 +69,23 @@ export default function Attendees() {
     if (autoPrint) setTimeout(() => window.print(), 300);
   }
 
-  function cerrarModal() { setModal(null); setGuardado(null); setErrorForm(null); }
+  function cerrarModal() { setModal(null); setGuardado(null); setErrorForm(null); setRucMensaje(null); }
+
+  // Botón aparte, nunca automático: si el staff ya tiene el nombre
+  // correcto a mano, no hace falta tocarlo. Nivel 1 busca localmente
+  // (alguien de este evento ya registrado con ese RUC); nivel 2 consulta
+  // SUNAT vía Decolecta, con failover de dos tokens del lado del server.
+  async function consultarRuc() {
+    const ruc = rucRef.current?.value.trim() ?? "";
+    if (!/^\d{11}$/.test(ruc)) { setRucMensaje("⚠️ El RUC debe tener 11 dígitos."); return; }
+    setConsultandoRuc(true);
+    setRucMensaje(null);
+    const { data: res, error } = await sbMkt.functions.invoke("buscar-empresa-por-ruc", { body: { ruc } });
+    setConsultandoRuc(false);
+    if (error || !res?.success) { setRucMensaje(res?.mensaje ?? "❌ Error al consultar el RUC."); return; }
+    if (empresaRef.current) empresaRef.current.value = res.empresa;
+    setRucMensaje("✅ Empresa encontrada.");
+  }
 
   return (
     <div className="screen">
@@ -144,13 +165,21 @@ export default function Attendees() {
                 </label>
                 <label>
                   RUC
-                  <input name="ruc" defaultValue={modal === "new" ? "" : modal.ruc} placeholder="20123456789" />
-                  {/* Autocompletado de empresa por RUC: pendiente — falta portar
-                      buscar-empresa-por-ruc de V2 a este proyecto. */}
+                  <div className="input-with-action">
+                    <input ref={rucRef} name="ruc" defaultValue={modal === "new" ? "" : modal.ruc} placeholder="20123456789" />
+                    <button type="button" onClick={consultarRuc} disabled={consultandoRuc} aria-label="Consultar RUC en SUNAT">
+                      {consultandoRuc ? <Loader2 size={16} className="spin" /> : <Search size={16} />}
+                    </button>
+                  </div>
+                  {rucMensaje && (
+                    <small style={{ color: rucMensaje.startsWith("✅") ? "var(--mkt-success)" : "var(--mkt-danger)" }}>
+                      {rucMensaje}
+                    </small>
+                  )}
                 </label>
                 <label>
                   Empresa
-                  <input name="empresa" defaultValue={modal === "new" ? "" : modal.empresa} placeholder="Nombre de la empresa" />
+                  <input ref={empresaRef} name="empresa" defaultValue={modal === "new" ? "" : modal.empresa} placeholder="Nombre de la empresa" />
                 </label>
                 <label className="checkbox-row">
                   <input type="checkbox" checked={autoPrint} onChange={togglePrint} />

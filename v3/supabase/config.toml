@@ -6,3 +6,9 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/sincronizar-inscripciones/deno.json"
 entrypoint = "./functions/sincronizar-inscripciones/index.ts"
+
+[functions.buscar-empresa-por-ruc]
+enabled = true
+verify_jwt = false
+import_map = "./functions/buscar-empresa-por-ruc/deno.json"
+entrypoint = "./functions/buscar-empresa-por-ruc/index.ts"
