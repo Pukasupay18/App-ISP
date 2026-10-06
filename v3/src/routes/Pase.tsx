@@ -185,7 +185,7 @@ export default function Pase() {
             onClick={() => abrirYRegistrar(CANAL_WHATSAPP, "canal")}
             className="flex w-full items-center justify-between rounded-input border border-gray-line px-4 py-3 text-left text-sm"
           >
-            <span className="flex items-center gap-2"><Megaphone size={16} /> Unirse al canal de difusión</span>
+            <span className="flex items-center gap-2"><Megaphone size={16} /> Unirse al canal de difusión de WhatsApp</span>
             <span>{data.boletosExtraHechos.includes("canal") ? "✅" : "+3"}</span>
           </button>
 
