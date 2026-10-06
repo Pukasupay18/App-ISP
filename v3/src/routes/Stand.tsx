@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
+import { Camera } from "lucide-react";
 import { sbPublic } from "../lib/supabaseClient";
 
 // El QR del gafete codifica el link completo (".../#/pase/CQ0427FX"), no
@@ -36,6 +37,7 @@ export default function Stand() {
   const [nota, setNota] = useState("");
   const [notaGuardada, setNotaGuardada] = useState(false);
   const [contadorHoy, setContadorHoy] = useState(0);
+  const [escaneando, setEscaneando] = useState(false);
 
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const procesandoRef = useRef(false);
@@ -75,8 +77,15 @@ export default function Stand() {
     }, 2000);
   }, [codigo]);
 
+  // La cámara NO arranca sola al cargar la página: en un navegador recién
+  // abierto (nunca dio permiso antes), pedir la cámara apenas monta la
+  // pantalla suele demorar o directamente no disparar el prompt — se
+  // siente como que "no carga". Arrancarla recién al tocar un botón (gesto
+  // real del usuario) es más rápido y confiable en todos los navegadores.
+  const [errorCamara, setErrorCamara] = useState<string | null>(null);
+
   useEffect(() => {
-    if (!stand) return;
+    if (!stand || !escaneando) return;
     const scanner = new Html5Qrcode(readerId);
     scannerRef.current = scanner;
     scanner
@@ -86,12 +95,12 @@ export default function Stand() {
         (texto) => { procesarEscaneo(extraerCodigoAsistente(texto)); },
         () => { /* callback de "no se detectó QR en este frame" — se ignora, es ruido normal mientras escanea */ },
       )
-      .catch(() => setError("No se pudo acceder a la cámara. Revisa los permisos del navegador."));
+      .catch(() => { setErrorCamara("No se pudo acceder a la cámara. Revisa los permisos del navegador."); setEscaneando(false); });
 
     return () => {
       scanner.stop().then(() => scanner.clear()).catch(() => {});
     };
-  }, [stand, procesarEscaneo]);
+  }, [stand, escaneando, procesarEscaneo]);
 
   async function guardarNota() {
     if (!codigo || !resultado) return;
@@ -122,7 +131,18 @@ export default function Stand() {
         </Link>
       )}
 
-      <div id={readerId} className="overflow-hidden rounded-media bg-black" />
+      {escaneando ? (
+        <div id={readerId} className="overflow-hidden rounded-media bg-black" />
+      ) : (
+        <button
+          onClick={() => { setErrorCamara(null); setEscaneando(true); }}
+          className="flex h-[260px] w-full flex-col items-center justify-center gap-3 rounded-media border-2 border-dashed border-gray-line bg-card text-sm font-semibold text-purple"
+        >
+          <Camera size={28} />
+          Empezar a escanear asistentes
+        </button>
+      )}
+      {errorCamara && <p className="mt-2 text-center text-xs text-danger">{errorCamara}</p>}
 
       {resultado && (
         <div className={`mt-3 rounded-banner p-4 ${resultado.ok ? "bg-success-tint text-success" : "bg-danger-tint text-danger"}`}>
