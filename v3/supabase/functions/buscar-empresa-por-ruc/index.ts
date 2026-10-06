@@ -17,9 +17,13 @@
 // Los tokens viven en secrets de Supabase, nunca en el cliente:
 //   supabase secrets set DECOLECTA_API_TOKEN=xxx --project-ref hjdxrdptvlafjhtvdigp
 //   supabase secrets set DECOLECTA_API_TOKEN_2=yyy --project-ref hjdxrdptvlafjhtvdigp
+//
+// Imports con especificador completo (npm:/jsr:) en vez de bare specifier +
+// import map: así funciona igual desplegado por CLI que pegado directo en
+// el Dashboard (que no lee deno.json).
 
-import "@supabase/functions-js/edge-runtime.d.ts";
-import { withSupabase } from "@supabase/server";
+import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts";
+import { withSupabase } from "npm:@supabase/server@^1";
 
 type ResultadoDecolecta =
   | { tipo: "ok"; empresa: string }
