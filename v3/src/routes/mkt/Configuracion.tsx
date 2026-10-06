@@ -108,7 +108,6 @@ export default function Configuracion() {
               <span>Permite que la sincronización desde el Sheet siga sumando inscritos nuevos.</span>
             </div>
             <div className="setting-control">
-              <b className={config.registro_abierto ? "on" : ""}>{config.registro_abierto ? "Abierto" : "Cerrado"}</b>
               <Toggle
                 checked={config.registro_abierto}
                 onChange={() => setConfig({ ...config, registro_abierto: !config.registro_abierto })}
@@ -123,7 +122,6 @@ export default function Configuracion() {
               <span>También se puede prender/apagar desde la pestaña Sorteo.</span>
             </div>
             <div className="setting-control">
-              <b className={config.sorteo_abierto ? "on" : ""}>{config.sorteo_abierto ? "Abierto" : "Cerrado"}</b>
               <Toggle
                 checked={config.sorteo_abierto}
                 onChange={() => setConfig({ ...config, sorteo_abierto: !config.sorteo_abierto })}

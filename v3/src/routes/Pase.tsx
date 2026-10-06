@@ -29,11 +29,37 @@ const REDES_SOCIALES = [
 const CANAL_WHATSAPP = "https://whatsapp.com/channel/0029VbDLDQT0bIdoli8lXy0v";
 const RESENA_MAPS = "https://maps.app.goo.gl/pEQcWQDMJLGC43m56";
 
+// Minutos desde medianoche en hora de Lima (GMT-5), calculado con el reloj
+// del propio navegador — no hay llamada al servidor para saber qué hora es.
+function minutosLima(): number {
+  const partes = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date());
+  const h = Number(partes.find((p) => p.type === "hour")?.value ?? 0);
+  const m = Number(partes.find((p) => p.type === "minute")?.value ?? 0);
+  return h * 60 + m;
+}
+
+function minutosDesdeHora(hora: string): number {
+  const [h, m] = hora.split(":").map(Number);
+  return h * 60 + m;
+}
+
+// item.hora viene como "08:30 - 09:00". Un bloque que cruza medianoche
+// (ej. termina a las 00:30) no aplica en este evento, así que no hace
+// falta contemplarlo.
+function estaEnCurso(item: ItemCronograma, minutoActual: number): boolean {
+  const [inicio, fin] = item.hora.split("-").map((h) => h.trim());
+  if (!inicio || !fin) return false;
+  return minutoActual >= minutosDesdeHora(inicio) && minutoActual < minutosDesdeHora(fin);
+}
+
 export default function Pase() {
   const { codigo } = useParams<{ codigo: string }>();
   const [data, setData] = useState<PaseData | null>(null);
   const [aptosEnVivo, setAptosEnVivo] = useState<number | null>(null);
   const [cronograma, setCronograma] = useState<ItemCronograma[]>([]);
+  const [minutoActual, setMinutoActual] = useState(() => minutosLima());
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
 
@@ -54,11 +80,15 @@ export default function Pase() {
   }, []);
 
   // Cronograma: contenido estático del evento, una sola carga al entrar
-  // — sin polling, a diferencia del snapshot de aptos al sorteo.
+  // — sin polling, a diferencia del snapshot de aptos al sorteo. Lo que SÍ
+  // se actualiza solo es qué actividad está "en curso": eso es puro reloj
+  // del navegador (America/Lima), cero llamadas de red.
   useEffect(() => {
     sbPublic.rpc("obtener_cronograma").then(({ data: res }) => {
       if (Array.isArray(res)) setCronograma(res as ItemCronograma[]);
     });
+    const intervalo = setInterval(() => setMinutoActual(minutosLima()), 30_000);
+    return () => clearInterval(intervalo);
   }, []);
 
   useEffect(() => {
@@ -144,23 +174,6 @@ export default function Pase() {
         </div>
       )}
 
-      {cronograma.length > 0 && (
-        <div className="mt-4 rounded-content bg-card p-5 shadow">
-          <h2 className="mb-3 flex items-center gap-2 text-sm font-bold"><Clock size={16} /> Cronograma</h2>
-          <div className="divide-y divide-gray-line">
-            {cronograma.map((item, i) => (
-              <div key={i} className="py-2 text-sm">
-                <div className="flex items-start justify-between gap-3">
-                  <span className="font-mono text-xs text-gray">{item.hora}</span>
-                  <span className="text-right font-medium">{item.actividad}</span>
-                </div>
-                {item.expositor && <p className="mt-0.5 text-right text-xs text-purple">{item.expositor}</p>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="mt-4 rounded-content bg-card p-5 shadow">
         <h2 className="text-sm font-bold">Suma boletos</h2>
         <p className="mt-1 text-xs text-gray">
@@ -198,6 +211,28 @@ export default function Pase() {
           </button>
         </div>
       </div>
+
+      {cronograma.length > 0 && (
+        <div className="mt-4 rounded-content bg-card p-5 shadow">
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-bold"><Clock size={16} /> Cronograma</h2>
+          <div className="divide-y divide-gray-line">
+            {cronograma.map((item, i) => {
+              const enCurso = estaEnCurso(item, minutoActual);
+              return (
+                <div key={i} className={`-mx-2 rounded-input px-2 py-2 text-sm ${enCurso ? "bg-purple/10" : ""}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className={`font-mono text-xs ${enCurso ? "font-semibold text-purple" : "text-gray"}`}>
+                      {enCurso && "● "}{item.hora}
+                    </span>
+                    <span className={`text-right font-medium ${enCurso ? "text-purple" : ""}`}>{item.actividad}</span>
+                  </div>
+                  {item.expositor && <p className="mt-0.5 text-right text-xs text-purple">{item.expositor}</p>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 rounded-content bg-card p-5 shadow">
         <h2 className="mb-3 text-sm font-bold">Recorrido por stands</h2>

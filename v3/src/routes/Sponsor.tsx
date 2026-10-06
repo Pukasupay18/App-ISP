@@ -6,7 +6,6 @@ type PanelSponsor = {
   nombre: string;
   visitasHoy: number;
   totalVisitas: number;
-  porcentajeAlcanzado: number;
   ultimosVisitantes: { nombre: string; empresa: string; nota: string | null; visitedAt: string }[];
 };
 
@@ -46,10 +45,9 @@ export default function Sponsor() {
     <div className="mx-auto max-w-[680px] px-4 py-5">
       <h1 className="mb-4 text-lg font-bold">Panel Sponsor — {panel.nombre}</h1>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <Kpi label="Visitas hoy" valor={panel.visitasHoy} />
         <Kpi label="Visitas totales" valor={panel.totalVisitas} />
-        <Kpi label="% de asistentes" valor={`${panel.porcentajeAlcanzado}%`} />
       </div>
 
       <div className="mt-5 rounded-content bg-card p-5 shadow">

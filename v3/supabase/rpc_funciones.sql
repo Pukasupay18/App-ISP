@@ -430,7 +430,6 @@ declare
   v_stand record;
   v_visitas_hoy int;
   v_total_visitas int;
-  v_total_ingresados int;
   v_ultimos jsonb;
 begin
   select id, nombre into v_stand
@@ -448,9 +447,6 @@ begin
 
   select count(*) into v_total_visitas
   from public.stand_visits where stand_id = v_stand.id;
-
-  select count(*) into v_total_ingresados
-  from public.attendees where asistencia_at is not null;
 
   select coalesce(jsonb_agg(jsonb_build_object(
            'nombre', t.nombre,
@@ -473,9 +469,6 @@ begin
     'nombre', v_stand.nombre,
     'visitasHoy', v_visitas_hoy,
     'totalVisitas', v_total_visitas,
-    'porcentajeAlcanzado', case when v_total_ingresados > 0
-      then round((v_total_visitas::numeric / v_total_ingresados) * 100, 1)
-      else 0 end,
     'ultimosVisitantes', v_ultimos
   );
 end;
