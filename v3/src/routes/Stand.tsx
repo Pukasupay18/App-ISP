@@ -131,9 +131,9 @@ export default function Stand() {
         </Link>
       )}
 
-      {stand.tier === "complementario" ? (
+      {stand.tier !== "diamante" ? (
         <div className="flex h-[260px] w-full flex-col items-center justify-center gap-2 rounded-media border-2 border-dashed border-gray-line bg-card px-6 text-center text-sm text-gray">
-          Este stand es de nivel Complementario y no tiene función de escaneo.
+          Este stand no tiene función de escaneo — solo los stands Diamante escanean asistentes.
         </div>
       ) : escaneando ? (
         <div id={readerId} className="overflow-hidden rounded-media bg-black" />

@@ -133,7 +133,7 @@ begin
     into v_detalle
   from public.stands s
   left join public.stand_visits sv on sv.stand_id = s.id and sv.attendee_id = v_attendee.id
-  where s.activo;
+  where s.activo and s.tier = 'diamante';
 
   select coalesce(jsonb_agg(tipo), '[]'::jsonb) into v_boletos_extra
   from public.boletos_extra where attendee_id = v_attendee.id;
@@ -313,11 +313,11 @@ begin
     return jsonb_build_object('success', false, 'mensaje', '❌ Código de stand no válido.');
   end if;
 
-  -- Los stands Complementario no tienen función de escaneo (son auspicio
-  -- institucional, no un punto físico que registra leads) — bloqueado acá
+  -- Solo los stands Diamante escanean asistentes — Oro y Complementario
+  -- son auspicio sin punto físico que registra leads. Bloqueado acá
   -- también a nivel de datos, no solo ocultando el botón en el frontend.
-  if v_stand.tier = 'complementario' then
-    return jsonb_build_object('success', false, 'mensaje', '⛔ Este stand (nivel Complementario) no tiene función de escaneo.');
+  if v_stand.tier <> 'diamante' then
+    return jsonb_build_object('success', false, 'mensaje', '⛔ Este stand no tiene función de escaneo (solo Diamante escanea).');
   end if;
 
   select id, nombre, empresa into v_attendee

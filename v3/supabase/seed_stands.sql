@@ -37,4 +37,5 @@ insert into public.stands (nombre, codigo, codigo_sponsor, tier, panel_sponsor, 
   ('Optronics',                       'optronics-l3vb',  null,              'oro',            false, 17),
   ('Hayex',                           'hayex-z7mq',      'spn-hayex-f5kd',  'diamante',       true,  18),
   ('Tecsup',                          'tecsup-d1xh',     null,              'complementario', false, 19),
-  ('Mic',                             'mic-n6wa',        null,              'complementario', false, 20);
+  ('Mic',                             'mic-n6wa',        null,              'complementario', false, 20),
+  ('Peplink',                         'peplink-3xqd',    null,              'complementario', false, 21);
