@@ -131,7 +131,11 @@ export default function Stand() {
         </Link>
       )}
 
-      {escaneando ? (
+      {stand.tier === "complementario" ? (
+        <div className="flex h-[260px] w-full flex-col items-center justify-center gap-2 rounded-media border-2 border-dashed border-gray-line bg-card px-6 text-center text-sm text-gray">
+          Este stand es de nivel Complementario y no tiene función de escaneo.
+        </div>
+      ) : escaneando ? (
         <div id={readerId} className="overflow-hidden rounded-media bg-black" />
       ) : (
         <button

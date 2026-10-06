@@ -308,9 +308,16 @@ declare
   v_attendee record;
   v_insertado boolean;
 begin
-  select id, nombre into v_stand from public.stands where codigo = p_codigo_stand and activo;
+  select id, nombre, tier into v_stand from public.stands where codigo = p_codigo_stand and activo;
   if not found then
     return jsonb_build_object('success', false, 'mensaje', '❌ Código de stand no válido.');
+  end if;
+
+  -- Los stands Complementario no tienen función de escaneo (son auspicio
+  -- institucional, no un punto físico que registra leads) — bloqueado acá
+  -- también a nivel de datos, no solo ocultando el botón en el frontend.
+  if v_stand.tier = 'complementario' then
+    return jsonb_build_object('success', false, 'mensaje', '⛔ Este stand (nivel Complementario) no tiene función de escaneo.');
   end if;
 
   select id, nombre, empresa into v_attendee
