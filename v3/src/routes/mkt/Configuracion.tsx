@@ -1,19 +1,75 @@
 import { useEffect, useState } from "react";
-import { Check, ExternalLink, Settings } from "lucide-react";
+import { Calendar, Check, ExternalLink, Plus, Settings, Trash2 } from "lucide-react";
 import { sbMkt } from "../../lib/supabaseClient";
 import { Button, SectionTitle, Toggle } from "./shared";
-import type { EventConfig } from "./types";
+import type { CronogramaRow, EventConfig } from "./types";
 
 export default function Configuracion() {
   const [config, setConfig] = useState<EventConfig | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
 
+  const [cronograma, setCronograma] = useState<CronogramaRow[] | null>(null);
+  const [guardandoCrono, setGuardandoCrono] = useState(false);
+  const [guardadoCrono, setGuardadoCrono] = useState(false);
+  const [borrarIds, setBorrarIds] = useState<number[]>([]);
+
   useEffect(() => {
     sbMkt.from("event_config").select("*").eq("id", 1).single().then(({ data }) => {
       if (data) setConfig(data as EventConfig);
     });
+    sbMkt.from("cronograma").select("*").order("orden").then(({ data }) => {
+      setCronograma((data as CronogramaRow[]) ?? []);
+    });
   }, []);
+
+  function editarFila(id: number, campo: "hora" | "actividad" | "expositor", valor: string) {
+    setCronograma((prev) => prev?.map((f) => (f.id === id ? { ...f, [campo]: valor } : f)) ?? null);
+  }
+
+  function agregarFila() {
+    const siguienteOrden = (cronograma?.length ?? 0) + 1;
+    const idTemporal = -Date.now(); // negativo = todavía no existe en la base
+    setCronograma((prev) => [...(prev ?? []), { id: idTemporal, hora: "", actividad: "", expositor: "", orden: siguienteOrden }]);
+  }
+
+  function quitarFila(id: number) {
+    setCronograma((prev) => prev?.filter((f) => f.id !== id) ?? null);
+    if (id > 0) setBorrarIds((prev) => [...prev, id]);
+  }
+
+  async function guardarCronograma() {
+    if (!cronograma) return;
+    setGuardandoCrono(true);
+
+    if (borrarIds.length > 0) {
+      await sbMkt.from("cronograma").delete().in("id", borrarIds);
+    }
+
+    const existentes = cronograma.filter((f) => f.id > 0).map((f, i) => ({ ...f, orden: i + 1 }));
+    const nuevas = cronograma.filter((f) => f.id < 0).map((f, i) => ({
+      hora: f.hora, actividad: f.actividad, expositor: f.expositor || null, orden: existentes.length + i + 1,
+    }));
+
+    let fallo = false;
+    if (existentes.length > 0) {
+      const { error } = await sbMkt.from("cronograma").upsert(existentes.map((f) => ({ ...f, expositor: f.expositor || null })));
+      if (error) fallo = true;
+    }
+    if (!fallo && nuevas.length > 0) {
+      const { error } = await sbMkt.from("cronograma").insert(nuevas);
+      if (error) fallo = true;
+    }
+
+    setGuardandoCrono(false);
+    setBorrarIds([]);
+    if (!fallo) {
+      const { data } = await sbMkt.from("cronograma").select("*").order("orden");
+      setCronograma((data as CronogramaRow[]) ?? []);
+      setGuardadoCrono(true);
+      setTimeout(() => setGuardadoCrono(false), 2500);
+    }
+  }
 
   async function guardar() {
     if (!config) return;
@@ -96,7 +152,7 @@ export default function Configuracion() {
             <div className="config-icon"><ExternalLink size={20} /></div>
             <div>
               <h2>Recursos externos</h2>
-              <p>Enlaces de referencia para el equipo organizador (todavía no se usa en el frontend).</p>
+              <p>Enlace de referencia para el equipo organizador — no se sincroniza solo, el cronograma se edita abajo.</p>
             </div>
           </div>
           <label className="wide-label">
@@ -120,6 +176,54 @@ export default function Configuracion() {
         <div className="config-footer">
           <span>{guardado && <><Check size={16} /> Cambios guardados</>}</span>
           <Button onClick={guardar} disabled={guardando}>{guardando ? "Guardando…" : "Guardar cambios"}</Button>
+        </div>
+      </article>
+
+      <article className="card config-card">
+        <div className="config-section">
+          <div className="config-section-title">
+            <div className="config-icon"><Calendar size={20} /></div>
+            <div>
+              <h2>Cronograma</h2>
+              <p>Lo que ve el asistente en su pase. El orden de las filas es el orden en que se muestran.</p>
+            </div>
+          </div>
+
+          <div className="crono-editor">
+            {cronograma?.map((fila) => (
+              <div className="crono-row" key={fila.id}>
+                <input
+                  className="crono-hora"
+                  value={fila.hora}
+                  onChange={(e) => editarFila(fila.id, "hora", e.target.value)}
+                  placeholder="09:30 - 10:00"
+                />
+                <input
+                  className="crono-actividad"
+                  value={fila.actividad}
+                  onChange={(e) => editarFila(fila.id, "actividad", e.target.value)}
+                  placeholder="Actividad"
+                />
+                <input
+                  className="crono-expositor"
+                  value={fila.expositor ?? ""}
+                  onChange={(e) => editarFila(fila.id, "expositor", e.target.value)}
+                  placeholder="Expositor (opcional)"
+                />
+                <button type="button" className="icon-button" onClick={() => quitarFila(fila.id)} aria-label="Quitar fila">
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+            {cronograma?.length === 0 && <p className="empty-state">Sin filas todavía.</p>}
+          </div>
+
+          <Button variant="secondary" onClick={agregarFila}><Plus size={16} /> Agregar fila</Button>
+        </div>
+
+        <div className="config-footer">
+          <span>{guardadoCrono && <><Check size={16} /> Cronograma guardado</>}</span>
+          <Button onClick={guardarCronograma} disabled={guardandoCrono}>{guardandoCrono ? "Guardando…" : "Guardar cronograma"}</Button>
         </div>
       </article>
     </div>

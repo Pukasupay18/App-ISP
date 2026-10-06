@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
-import { Facebook, Instagram, Linkedin, Megaphone, Music2, Star } from "lucide-react";
+import { Clock, Facebook, Instagram, Linkedin, Megaphone, Music2, Star } from "lucide-react";
 import { sbPublic } from "../lib/supabaseClient";
+
+type ItemCronograma = { hora: string; actividad: string; expositor: string | null };
 
 type PaseData = {
   nombre: string;
@@ -31,6 +33,7 @@ export default function Pase() {
   const { codigo } = useParams<{ codigo: string }>();
   const [data, setData] = useState<PaseData | null>(null);
   const [aptosEnVivo, setAptosEnVivo] = useState<number | null>(null);
+  const [cronograma, setCronograma] = useState<ItemCronograma[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
 
@@ -48,6 +51,14 @@ export default function Pase() {
   const cargarSnapshot = useCallback(async () => {
     const { data: res } = await sbPublic.rpc("obtener_snapshot_publico");
     if (res?.success) setAptosEnVivo(res.aptosSorteo);
+  }, []);
+
+  // Cronograma: contenido estático del evento, una sola carga al entrar
+  // — sin polling, a diferencia del snapshot de aptos al sorteo.
+  useEffect(() => {
+    sbPublic.rpc("obtener_cronograma").then(({ data: res }) => {
+      if (Array.isArray(res)) setCronograma(res as ItemCronograma[]);
+    });
   }, []);
 
   useEffect(() => {
@@ -133,10 +144,27 @@ export default function Pase() {
         </div>
       )}
 
+      {cronograma.length > 0 && (
+        <div className="mt-4 rounded-content bg-card p-5 shadow">
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-bold"><Clock size={16} /> Cronograma</h2>
+          <div className="divide-y divide-gray-line">
+            {cronograma.map((item, i) => (
+              <div key={i} className="py-2 text-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="font-mono text-xs text-gray">{item.hora}</span>
+                  <span className="text-right font-medium">{item.actividad}</span>
+                </div>
+                {item.expositor && <p className="mt-0.5 text-right text-xs text-purple">{item.expositor}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="mt-4 rounded-content bg-card p-5 shadow">
         <h2 className="text-sm font-bold">Suma boletos</h2>
         <p className="mt-1 text-xs text-gray">
-          Cada acción te da 1 boleto para el sorteo. Tócala para abrir el link — queda registrada al instante, no hace falta volver aquí a confirmar.
+          Cada acción suma boletos para el sorteo. Tócala para abrir el link — queda registrada al instante, no hace falta volver aquí a confirmar.
         </p>
 
         <div className="mt-3 space-y-2">

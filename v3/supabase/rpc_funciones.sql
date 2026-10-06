@@ -232,6 +232,28 @@ $$;
 grant execute on function public.registrar_boleto_extra(text, text) to anon, authenticated;
 
 -- ---------------------------------------------------------------------
+-- obtener_cronograma() — agenda del evento para /pase (brief 4.1).
+-- Contenido estático: el frontend la pide UNA vez al cargar, sin polling
+-- (a diferencia de obtener_snapshot_publico, que sí cambia en vivo).
+-- ---------------------------------------------------------------------
+create or replace function public.obtener_cronograma()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'hora', hora,
+           'actividad', actividad,
+           'expositor', expositor
+         ) order by orden), '[]'::jsonb)
+  from public.cronograma;
+$$;
+
+grant execute on function public.obtener_cronograma() to anon, authenticated;
+
+-- ---------------------------------------------------------------------
 -- resolver_stand(p_codigo) — resuelve el código de la URL /stand/:codigo
 -- a nombre + tier + si tiene Panel Sponsor habilitado. El botón "Panel"
 -- del frontend se muestra/oculta según `panelSponsor`, nunca hardcodeado.

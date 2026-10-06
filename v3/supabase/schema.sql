@@ -138,6 +138,28 @@ create policy "staff MKT edita stands"
   using (public.es_staff_mkt());
 
 -- ---------------------------------------------------------------------
+-- CRONOGRAMA — agenda del evento (brief 4.1), mostrada en /pase. Es
+-- contenido estático durante el evento (no cambia en vivo como el
+-- conteo de boletos), así que el asistente la pide UNA vez al cargar su
+-- pase — sin polling — vía obtener_cronograma() (rpc_funciones.sql).
+-- Staff la edita desde Configuración, igual patrón que `stands`: RLS +
+-- GRANT directo a authenticated, sin pasar por RPC para escribir.
+-- ---------------------------------------------------------------------
+create table public.cronograma (
+  id         bigint generated always as identity primary key,
+  hora       text not null,
+  actividad  text not null,
+  expositor  text,
+  orden      int not null
+);
+alter table public.cronograma enable row level security;
+
+create policy "staff MKT administra cronograma"
+  on public.cronograma for all
+  using (public.es_staff_mkt())
+  with check (public.es_staff_mkt());
+
+-- ---------------------------------------------------------------------
 -- ATTENDEES (asistentes)
 -- `id` sigue siendo el código legible del gafete ("CQ0427FX") — es el
 -- mismo valor que identifica /pase/:id, no hace falta un token aparte
@@ -275,6 +297,7 @@ grant select, insert, update on public.attendees      to authenticated;
 grant select, insert           on public.stand_visits  to authenticated;
 grant select, insert           on public.boletos_extra to authenticated;
 grant select, insert, update on public.stands          to authenticated;
+grant select, insert, update, delete on public.cronograma to authenticated;
 grant select, update           on public.event_config   to authenticated;
 grant select                   on public.admin_users     to authenticated;
 

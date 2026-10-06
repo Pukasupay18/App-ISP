@@ -40,3 +40,11 @@ export type EventConfig = {
   umbral_boletos: number;
   cronograma_sheet_url: string | null;
 };
+
+export type CronogramaRow = {
+  id: number;
+  hora: string;
+  actividad: string;
+  expositor: string | null;
+  orden: number;
+};
