@@ -219,7 +219,7 @@ export default function Pase() {
             {cronograma.map((item, i) => {
               const enCurso = estaEnCurso(item, minutoActual);
               return (
-                <div key={i} className={`-mx-2 rounded-input px-2 py-2 text-sm ${enCurso ? "bg-purple/10" : ""}`}>
+                <div key={i} className={`-mx-2 px-2 py-2 text-sm ${enCurso ? "bg-purple/10" : ""}`}>
                   <div className="flex items-start justify-between gap-3">
                     <span className={`font-mono text-xs ${enCurso ? "font-semibold text-purple" : "text-gray"}`}>
                       {enCurso && "● "}{item.hora}
