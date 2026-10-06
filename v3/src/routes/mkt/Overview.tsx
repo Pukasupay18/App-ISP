@@ -1,12 +1,21 @@
 import type { CSSProperties } from "react";
-import { ChevronRight, Gift, RefreshCw, Store, UserCheck, Users } from "lucide-react";
-import { MetricCard, minutosDesde, SectionTitle } from "./shared";
+import { ChevronRight, Gift, Store, UserCheck, Users } from "lucide-react";
+import { MetricCard, RefreshButton, minutosDesde, SectionTitle } from "./shared";
 import type { Metricas, View } from "./types";
 
 export default function Overview({
-  metricas, cargando, recargar, goTo,
-}: { metricas: Metricas | null; cargando: boolean; recargar: () => void; goTo: (v: View) => void }) {
+  metricas, cargando, recargar, goTo, ultimaActualizacion,
+}: {
+  metricas: Metricas | null; cargando: boolean; recargar: () => void; goTo: (v: View) => void;
+  ultimaActualizacion: Date | null;
+}) {
   if (!metricas) return <div className="empty-state">{cargando ? "Cargando…" : "Sin datos."}</div>;
+
+  const textoActualizacion = cargando
+    ? "Actualizando…"
+    : ultimaActualizacion
+      ? `Actualizado hace ${Math.max(0, Math.round((Date.now() - ultimaActualizacion.getTime()) / 60_000))} min · se refresca solo cada 5 min`
+      : null;
 
   const pendientes = metricas.total - metricas.ingresados;
   const pct = metricas.total > 0 ? Math.round((metricas.ingresados / metricas.total) * 100) : 0;
@@ -22,10 +31,9 @@ export default function Overview({
           <p>Panel de marketing</p>
           <h2>Resumen del evento</h2>
           <span>Registro {metricas.registroAbierto ? "abierto" : "cerrado"} · Sorteo {metricas.sorteoAbierto ? "abierto" : "cerrado"}</span>
+          {textoActualizacion && <span className="welcome-sync">{textoActualizacion}</span>}
         </div>
-        <button className="icon-button" onClick={recargar} disabled={cargando} aria-label="Actualizar">
-          <RefreshCw size={17} className={cargando ? "spin" : ""} />
-        </button>
+        <RefreshButton cargando={cargando} onClick={recargar} />
       </div>
 
       <div className="metrics-grid">

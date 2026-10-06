@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { sbMkt } from "../lib/supabaseClient";
-import { Sidebar, Topbar, MobileNav } from "./mkt/Chrome";
+import { Sidebar, Topbar } from "./mkt/Chrome";
 import Overview from "./mkt/Overview";
 import Attendees from "./mkt/Attendees";
 import Stands from "./mkt/Stands";
@@ -23,6 +23,7 @@ export default function Mkt() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [metricas, setMetricas] = useState<Metricas | null>(null);
   const [cargandoMetricas, setCargandoMetricas] = useState(false);
+  const [ultimaActualizacion, setUltimaActualizacion] = useState<Date | null>(null);
 
   useEffect(() => {
     sbMkt.auth.getSession().then(({ data }) => setSession(!!data.session));
@@ -34,11 +35,27 @@ export default function Mkt() {
     setCargandoMetricas(true);
     const { data: res } = await sbMkt.rpc("obtener_metricas_mkt");
     setCargandoMetricas(false);
-    if (res?.success) setMetricas(res as Metricas);
+    if (res?.success) { setMetricas(res as Metricas); setUltimaActualizacion(new Date()); }
     else if (res?.mensaje) { await sbMkt.auth.signOut(); setSession(false); }
   }, []);
 
-  useEffect(() => { if (session) cargarMetricas(); }, [session, cargarMetricas]);
+  // Auto-refresco cada 5 min (no en vivo, no Realtime) + el botón
+  // "Actualizar" de cada pantalla sigue sirviendo para forzar un refresco
+  // antes de esos 5 min. Pausado con la pestaña en segundo plano, igual
+  // que el resto del panel — cero invocaciones extra mientras nadie mira.
+  useEffect(() => {
+    if (!session) return;
+    cargarMetricas();
+    let intervalo: ReturnType<typeof setInterval> | null = null;
+    const iniciar = () => { intervalo = setInterval(cargarMetricas, 5 * 60_000); };
+    const detener = () => { if (intervalo) clearInterval(intervalo); };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") { cargarMetricas(); iniciar(); } else detener();
+    };
+    iniciar();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { detener(); document.removeEventListener("visibilitychange", onVisibility); };
+  }, [session, cargarMetricas]);
 
   async function login(e: FormEvent) {
     e.preventDefault();
@@ -74,7 +91,7 @@ export default function Mkt() {
         <main className="main">
           <Topbar view={view} onMenu={() => setMenuOpen(true)} />
           <div className="content">
-            {view === "resumen" && <Overview metricas={metricas} cargando={cargandoMetricas} recargar={cargarMetricas} goTo={setView} />}
+            {view === "resumen" && <Overview metricas={metricas} cargando={cargandoMetricas} recargar={cargarMetricas} goTo={setView} ultimaActualizacion={ultimaActualizacion} />}
             {view === "asistentes" && <Attendees />}
             {view === "stands" && <Stands />}
             {view === "ranking" && <Ranking metricas={metricas} cargando={cargandoMetricas} recargar={cargarMetricas} />}
@@ -82,7 +99,6 @@ export default function Mkt() {
             {view === "configuracion" && <Configuracion />}
           </div>
         </main>
-        <MobileNav view={view} setView={setView} />
       </div>
     </div>
   );

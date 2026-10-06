@@ -1,7 +1,9 @@
+import { useState } from "react";
 import {
-  BarChart3, Gift, LayoutDashboard, Menu, MoreHorizontal, Settings, Store, TicketCheck, Users, X,
-  type LucideIcon,
+  BarChart3, ChevronLeft, Gift, LayoutDashboard, LogOut, Menu, MoreHorizontal, Scan, Settings, Store,
+  TicketCheck, UserSearch, Users, X, type LucideIcon,
 } from "lucide-react";
+import { sbMkt } from "../../lib/supabaseClient";
 import type { View } from "./types";
 
 const nav: { id: View; label: string; icon: LucideIcon }[] = [
@@ -33,9 +35,30 @@ export function Topbar({ view, onMenu }: { view: View; onMenu: () => void }) {
   );
 }
 
+type StandAtajo = { nombre: string; codigo: string };
+
 export function Sidebar({
   view, setView, open, close, aptos, onLogout,
 }: { view: View; setView: (v: View) => void; open: boolean; close: () => void; aptos: number; onLogout: () => void }) {
+  const [menu, setMenu] = useState<"cerrado" | "principal" | "stands">("cerrado");
+  const [stands, setStands] = useState<StandAtajo[] | null>(null);
+
+  function cerrarMenu() { setMenu("cerrado"); }
+
+  function verComoAsistente() {
+    const codigo = window.prompt("Código del asistente (ej. CQ0427FX):");
+    if (codigo?.trim()) window.open(`${window.location.origin}/#/pase/${codigo.trim().toUpperCase()}`, "_blank");
+    cerrarMenu();
+  }
+
+  async function abrirApoyoStand() {
+    if (!stands) {
+      const { data } = await sbMkt.from("stands").select("nombre, codigo").eq("activo", true).order("orden");
+      setStands((data as StandAtajo[]) ?? []);
+    }
+    setMenu("stands");
+  }
+
   return (
     <>
       {open && <button className="sidebar-backdrop" onClick={close} aria-label="Cerrar menú" />}
@@ -72,24 +95,47 @@ export function Sidebar({
             <strong>Marketing</strong>
             <span>Fiberlux ISP</span>
           </div>
-          <button className="icon-button" onClick={onLogout} aria-label="Cerrar sesión">
+          <button
+            className="icon-button"
+            onClick={() => setMenu(menu === "cerrado" ? "principal" : "cerrado")}
+            aria-label="Más opciones"
+          >
             <MoreHorizontal size={19} />
           </button>
+
+          {menu !== "cerrado" && (
+            <>
+              <button className="user-menu-backdrop" onClick={cerrarMenu} aria-label="Cerrar" />
+              <div className="user-menu">
+                {menu === "principal" ? (
+                  <>
+                    <button onClick={verComoAsistente}><UserSearch size={16} /> Vista como asistente</button>
+                    <button onClick={abrirApoyoStand}><Scan size={16} /> Apoyo a un stand</button>
+                    <hr />
+                    <button className="danger" onClick={() => { cerrarMenu(); onLogout(); }}><LogOut size={16} /> Cerrar sesión</button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => setMenu("principal")}><ChevronLeft size={16} /> Volver</button>
+                    <hr />
+                    {stands === null && <p className="user-menu-empty">Cargando…</p>}
+                    {stands?.length === 0 && <p className="user-menu-empty">Sin stands activos.</p>}
+                    {stands?.map((s) => (
+                      <button
+                        key={s.codigo}
+                        onClick={() => { window.open(`${window.location.origin}/#/stand/${s.codigo}`, "_blank"); cerrarMenu(); }}
+                      >
+                        <Store size={16} /> {s.nombre}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </aside>
     </>
   );
 }
 
-export function MobileNav({ view, setView }: { view: View; setView: (v: View) => void }) {
-  return (
-    <nav className="mobile-nav">
-      {nav.slice(0, 5).map((item) => (
-        <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => setView(item.id)}>
-          <item.icon size={20} />
-          <span>{item.label}</span>
-        </button>
-      ))}
-    </nav>
-  );
-}

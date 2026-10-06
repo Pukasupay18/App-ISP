@@ -16,6 +16,11 @@
 -- constantes distintas para lo mismo). obtener_pase, obtener_snapshot_
 -- publico, obtener_metricas_mkt y obtener_lista_sorteo_mkt pasan TODOS
 -- por estas dos funciones, nunca recalculan el umbral por su cuenta.
+--
+-- Visitar un stand NO suma boletos (es un recurso del propio stand para
+-- registrar su lead). Cada tipo de boletos_extra pesa distinto — el peso
+-- vive únicamente acá, ver también el comentario de la tabla en
+-- schema.sql.
 -- ---------------------------------------------------------------------
 create or replace function public.total_boletos(p_id text)
 returns int
@@ -24,9 +29,18 @@ stable
 security definer
 set search_path = public
 as $$
-  select
-    (select count(*) from public.stand_visits where attendee_id = p_id)
-    + (select count(*) from public.boletos_extra where attendee_id = p_id);
+  select coalesce(sum(
+    case tipo
+      when 'canal' then 3
+      when 'resena' then 1
+      when 'red_facebook' then 2
+      when 'red_instagram' then 2
+      when 'red_linkedin' then 2
+      when 'red_tiktok' then 2
+      else 0
+    end
+  ), 0)
+  from public.boletos_extra where attendee_id = p_id;
 $$;
 
 create or replace function public.es_apto_sorteo(p_id text)
@@ -195,7 +209,7 @@ as $$
 declare
   v_id text;
 begin
-  if p_tipo not in ('red_social', 'canal', 'resena') then
+  if p_tipo not in ('red_facebook', 'red_instagram', 'red_linkedin', 'red_tiktok', 'canal', 'resena') then
     return jsonb_build_object('success', false, 'mensaje', '⚠️ Tipo de boleto no válido.');
   end if;
 

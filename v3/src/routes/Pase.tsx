@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
-import { ExternalLink, Facebook, Instagram, Linkedin, Megaphone, Star } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Megaphone, Music2, Star } from "lucide-react";
 import { sbPublic } from "../lib/supabaseClient";
 
 type PaseData = {
@@ -15,11 +15,14 @@ type PaseData = {
   boletosExtraHechos: string[];
 };
 
+// Pesos de cada acción — deben coincidir EXACTO con total_boletos() en
+// rpc_funciones.sql (una sola fuente de verdad del lado del servidor;
+// esto acá es solo para mostrar el "+N" correcto en cada botón).
 const REDES_SOCIALES = [
-  { nombre: "Facebook", icon: Facebook, url: "https://www.facebook.com/p/Fiberlux-ISP-61590764393700/" },
-  { nombre: "Instagram", icon: Instagram, url: "https://www.instagram.com/fiberluxisp/" },
-  { nombre: "LinkedIn", icon: Linkedin, url: "https://www.linkedin.com/company/fiberlux-isp/" },
-  { nombre: "TikTok", icon: ExternalLink, url: "https://www.tiktok.com/@fiberlux.isp" },
+  { tipo: "red_facebook", nombre: "Facebook", icon: Facebook, url: "https://www.facebook.com/p/Fiberlux-ISP-61590764393700/", puntos: 2 },
+  { tipo: "red_instagram", nombre: "Instagram", icon: Instagram, url: "https://www.instagram.com/fiberluxisp/", puntos: 2 },
+  { tipo: "red_linkedin", nombre: "LinkedIn", icon: Linkedin, url: "https://www.linkedin.com/company/fiberlux-isp/", puntos: 2 },
+  { tipo: "red_tiktok", nombre: "TikTok", icon: Music2, url: "https://www.tiktok.com/@fiberlux.isp", puntos: 2 },
 ];
 const CANAL_WHATSAPP = "https://whatsapp.com/channel/0029VbDLDQT0bIdoli8lXy0v";
 const RESENA_MAPS = "https://maps.app.goo.gl/pEQcWQDMJLGC43m56";
@@ -137,34 +140,26 @@ export default function Pase() {
         </p>
 
         <div className="mt-3 space-y-2">
-          {/* Redes sociales: un solo boleto cubre las 4 plataformas — tocar
-              cualquiera abre esa red y marca la acción como hecha. */}
-          <div className="rounded-input border border-gray-line px-4 py-3">
-            <div className="mb-2 flex items-center justify-between text-sm">
-              <span>Seguir redes sociales</span>
-              <span>{data.boletosExtraHechos.includes("red_social") ? "✅" : "+1"}</span>
-            </div>
-            <div className="flex gap-2">
-              {REDES_SOCIALES.map((r) => (
-                <button
-                  key={r.nombre}
-                  onClick={() => abrirYRegistrar(r.url, "red_social")}
-                  aria-label={r.nombre}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-purple/10 text-purple"
-                >
-                  <r.icon size={18} />
-                </button>
-              ))}
-            </div>
-          </div>
-
           <button
             onClick={() => abrirYRegistrar(CANAL_WHATSAPP, "canal")}
             className="flex w-full items-center justify-between rounded-input border border-gray-line px-4 py-3 text-left text-sm"
           >
             <span className="flex items-center gap-2"><Megaphone size={16} /> Unirse al canal de difusión</span>
-            <span>{data.boletosExtraHechos.includes("canal") ? "✅" : "+1"}</span>
+            <span>{data.boletosExtraHechos.includes("canal") ? "✅" : "+3"}</span>
           </button>
+
+          {/* Cada red social es independiente: tocar una abre esa red Y
+              registra solo esa acción (ya no comparten un único boleto). */}
+          {REDES_SOCIALES.map((r) => (
+            <button
+              key={r.tipo}
+              onClick={() => abrirYRegistrar(r.url, r.tipo)}
+              className="flex w-full items-center justify-between rounded-input border border-gray-line px-4 py-3 text-left text-sm"
+            >
+              <span className="flex items-center gap-2"><r.icon size={16} /> Seguir en {r.nombre}</span>
+              <span>{data.boletosExtraHechos.includes(r.tipo) ? "✅" : `+${r.puntos}`}</span>
+            </button>
+          ))}
 
           <button
             onClick={() => abrirYRegistrar(RESENA_MAPS, "resena")}

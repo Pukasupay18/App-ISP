@@ -68,7 +68,7 @@ create table public.event_config (
   id                 int primary key default 1,
   registro_abierto   boolean not null default true,
   sorteo_abierto     boolean not null default false,
-  umbral_boletos     int not null default 5,
+  umbral_boletos     int not null default 6,
   cronograma_sheet_url text,
   -- Cooldown de sincronizar-inscripciones: evita que el cron (cada 5 min)
   -- y el botón "Sincronizar ahora" del panel Mkt se pisen entre sí, o que
@@ -212,20 +212,27 @@ create policy "staff MKT lee visitas"
 -- política de insert para "anon" aquí.
 
 -- ---------------------------------------------------------------------
--- BOLETOS_EXTRA — boletos de rifa que NO vienen de visitar un stand:
--- seguir una red social, unirse al canal de difusión, dejar una reseña.
--- Un boleto por tipo por asistente (la PK compuesta evita que alguien
--- reclame el mismo boleto dos veces con clics repetidos).
+-- BOLETOS_EXTRA — boletos de rifa. Visitar un stand ya NO suma boletos
+-- (es un recurso propio del stand para registrar su lead, no un
+-- incentivo de sorteo); todos los boletos salen de esta tabla, una fila
+-- por tipo por asistente (la PK compuesta evita reclamar el mismo boleto
+-- dos veces con clics repetidos). Cada tipo pesa distinto — el peso vive
+-- en `total_boletos()` (rpc_funciones.sql), NO aquí, para no duplicar la
+-- regla de puntos en dos lugares:
+--   red_facebook / red_instagram / red_linkedin / red_tiktok = 2 c/u
+--   canal (WhatsApp)                                         = 3
+--   resena (Google Maps)                                     = 1
 --
--- Total de boletos de un asistente = count(stand_visits) + count(esta
--- tabla). "Apto al sorteo" = ese total >= event_config.umbral_boletos —
+-- "Apto al sorteo" = total_boletos(id) >= event_config.umbral_boletos —
 -- UNA sola fórmula, en una sola función RPC, consumida tanto por el
 -- banner de urgencia del asistente como por el KPI de Mkt (regla no
 -- negociable del brief: nunca dos constantes distintas para lo mismo).
 -- ---------------------------------------------------------------------
 create table public.boletos_extra (
   attendee_id text not null references public.attendees (id) on delete cascade,
-  tipo        text not null check (tipo in ('red_social', 'canal', 'resena')),
+  tipo        text not null check (tipo in (
+    'red_facebook', 'red_instagram', 'red_linkedin', 'red_tiktok', 'canal', 'resena'
+  )),
   creado_en   timestamptz not null default now(),
   primary key (attendee_id, tipo)
 );
