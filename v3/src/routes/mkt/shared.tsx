@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ElementType, type ReactNode } from "r
 import { Check, RefreshCw } from "lucide-react";
 
 export function Button({
-  children, variant = "primary", className = "", onClick, disabled = false, type = "button",
+  children, variant = "primary", className = "", onClick, disabled = false, type = "button", title,
 }: {
   children: ReactNode;
   variant?: "primary" | "secondary" | "ghost";
@@ -10,9 +10,10 @@ export function Button({
   onClick?: () => void;
   disabled?: boolean;
   type?: "button" | "submit";
+  title?: string;
 }) {
   return (
-    <button type={type} disabled={disabled} onClick={onClick} className={`button button-${variant} ${className}`}>
+    <button type={type} disabled={disabled} onClick={onClick} title={title} className={`button button-${variant} ${className}`}>
       {children}
     </button>
   );

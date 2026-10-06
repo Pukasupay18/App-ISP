@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Building2, Check, ChevronRight, Edit3, Loader2, Plus, RefreshCw, Search, X } from "lucide-react";
+import { Building2, Check, ChevronRight, CloudDownload, Edit3, Loader2, Plus, RefreshCw, Search, X } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { sbMkt } from "../../lib/supabaseClient";
 import { Button, SectionTitle } from "./shared";
@@ -19,6 +19,25 @@ export default function Attendees() {
   const empresaRef = useRef<HTMLInputElement>(null);
   const [consultandoRuc, setConsultandoRuc] = useState(false);
   const [rucMensaje, setRucMensaje] = useState<string | null>(null);
+
+  const [sincronizando, setSincronizando] = useState(false);
+  const [syncMensaje, setSyncMensaje] = useState<string | null>(null);
+
+  // El botón "Actualizar" (ícono) solo vuelve a pedir lo que YA está en
+  // Supabase — no toca el Sheet. Este botón sí dispara la Edge Function
+  // que lee el Sheet de inscripciones; el cron la corre sola cada 5 min,
+  // esto es para cuando alguien no quiere esperar. El cooldown de 30s
+  // contra doble clic vive del lado del servidor (event_config.
+  // ultima_sincronizacion), así que no hace falta duplicarlo acá.
+  async function sincronizarInscripciones() {
+    setSincronizando(true);
+    setSyncMensaje(null);
+    const { data: res, error } = await sbMkt.functions.invoke("sincronizar-inscripciones", { body: {} });
+    setSincronizando(false);
+    if (error || !res?.success) { setSyncMensaje(res?.mensaje ?? "❌ Error al sincronizar."); return; }
+    setSyncMensaje(res.mensaje);
+    if (res.nuevos > 0) cargar();
+  }
 
   async function cargar() {
     setCargando(true);
@@ -101,8 +120,14 @@ export default function Attendees() {
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar por nombre, email o empresa" />
           {query && <button onClick={() => setQuery("")}><X size={16} /></button>}
         </label>
-        <Button variant="secondary" onClick={cargar}><RefreshCw size={17} /></Button>
+        <Button variant="secondary" onClick={sincronizarInscripciones} disabled={sincronizando} title="Traer inscripciones nuevas del Sheet">
+          {sincronizando ? <Loader2 size={17} className="spin" /> : <CloudDownload size={17} />}
+        </Button>
+        <Button variant="secondary" onClick={cargar} title="Recargar la lista">
+          <RefreshCw size={17} />
+        </Button>
       </div>
+      {syncMensaje && <p className="sync-feedback">{syncMensaje}</p>}
 
       <div className="results-heading">
         <p><strong className="mono">{filtrados.length}</strong> asistentes encontrados</p>
