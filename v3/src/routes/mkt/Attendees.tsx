@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Building2, Check, ChevronRight, CloudDownload, Edit3, Loader2, Plus, RefreshCw, Search, X } from "lucide-react";
+import {
+  Building2, Check, ChevronRight, CloudDownload, Edit3, Loader2, Plus, Printer, RefreshCw, Search, UserCheck, X,
+} from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { sbMkt } from "../../lib/supabaseClient";
 import { Button, SectionTitle } from "./shared";
@@ -90,6 +92,29 @@ export default function Attendees() {
 
   function cerrarModal() { setModal(null); setGuardado(null); setErrorForm(null); setRucMensaje(null); }
 
+  const [marcandoId, setMarcandoId] = useState<string | null>(null);
+
+  // Botón aparte de "Editar": marca el ingreso de alguien que ya estaba
+  // en la lista y abre de una vez la vista de imprimir su etiqueta —
+  // editar datos ya NO marca asistencia de rebote (antes sí, confundía).
+  async function marcarAsistencia(persona: Asistente) {
+    setMarcandoId(persona.id);
+    const { data: res } = await sbMkt.rpc("marcar_asistencia_mkt", { p_id: persona.id });
+    setMarcandoId(null);
+    if (!res?.success) return;
+    setModal(persona);
+    setGuardado({ id: res.id, nombre: res.nombre, empresa: res.empresa });
+    cargar();
+    if (autoPrint) setTimeout(() => window.print(), 300);
+  }
+
+  // Reimprimir no toca el servidor — es solo para cuando alguien que YA
+  // ingresó perdió su gafete y necesita una copia nueva de la etiqueta.
+  function reimprimirGafete(persona: Asistente) {
+    setModal(persona);
+    setGuardado({ id: persona.id, nombre: persona.nombre, empresa: persona.empresa || "---" });
+  }
+
   // Botón aparte, nunca automático: si el staff ya tiene el nombre
   // correcto a mano, no hace falta tocarlo. Nivel 1 busca localmente
   // (alguien de este evento ya registrado con ese RUC); nivel 2 consulta
@@ -154,9 +179,28 @@ export default function Attendees() {
               <span>Estado</span>
               <strong>{persona.ingresado ? "Ingresó" : "Pendiente"}</strong>
             </div>
-            <button className="icon-button edit" onClick={() => setModal(persona)} aria-label={`Editar a ${persona.nombre}`}>
-              <Edit3 size={17} />
-            </button>
+            <div className="attendee-actions">
+              <button
+                className="icon-button"
+                onClick={() => marcarAsistencia(persona)}
+                disabled={persona.ingresado || marcandoId === persona.id}
+                aria-label={persona.ingresado ? `${persona.nombre} ya ingresó` : `Marcar asistencia de ${persona.nombre}`}
+                title={persona.ingresado ? "Ya ingresó" : "Marcar asistencia e imprimir"}
+              >
+                {marcandoId === persona.id ? <Loader2 size={17} className="spin" /> : <UserCheck size={17} />}
+              </button>
+              <button
+                className="icon-button"
+                onClick={() => reimprimirGafete(persona)}
+                aria-label={`Reimprimir gafete de ${persona.nombre}`}
+                title="Reimprimir gafete"
+              >
+                <Printer size={17} />
+              </button>
+              <button className="icon-button edit" onClick={() => setModal(persona)} aria-label={`Editar a ${persona.nombre}`} title="Editar datos">
+                <Edit3 size={17} />
+              </button>
+            </div>
           </article>
         ))}
         {!cargando && filtrados.length === 0 && <p className="empty-state">Sin resultados.</p>}
@@ -221,7 +265,7 @@ export default function Attendees() {
             ) : (
               <div className="label-preview">
                 <div className="success-badge"><Check size={20} /></div>
-                <p>El asistente fue guardado correctamente.</p>
+                <p>Etiqueta lista para imprimir.</p>
                 <div className="print-label">
                   {/* El QR codifica el link completo a /pase/:id, no solo el
                       código — así, cuando el propio asistente escanea su
@@ -229,8 +273,12 @@ export default function Attendees() {
                       su pase, sin pasar por la pantalla de "ingresa tu
                       código". El escáner de stand (Stand.tsx) acepta ambos
                       formatos, por si alguna vez hay un QR con el código
-                      plano. */}
-                  <QRCodeSVG value={`${window.location.origin}/#/pase/${guardado.id}`} size={88} level="L" />
+                      plano. level="L" ya es la densidad más baja posible —
+                      el tamaño (92px) es lo más grande que entra en el
+                      alto real de la etiqueta (29mm) sin pisar el margen
+                      seguro de impresión, ver el padding reducido de
+                      .print-label dentro de @media print en mkt.css. */}
+                  <QRCodeSVG value={`${window.location.origin}/#/pase/${guardado.id}`} size={92} level="L" />
                   <div>
                     <strong>{guardado.nombre}</strong>
                     <span>{guardado.empresa}</span>

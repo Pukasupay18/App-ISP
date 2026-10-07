@@ -13,7 +13,6 @@ type PaseData = {
   aptoSorteo: boolean;
   participaSorteo: boolean;
   sorteoAbierto: boolean;
-  stands: { nombre: string; visitado: boolean }[];
   boletosExtraHechos: string[];
 };
 
@@ -233,20 +232,6 @@ export default function Pase() {
           </div>
         </div>
       )}
-
-      <div className="mt-4 rounded-content bg-card p-5 shadow">
-        <h2 className="mb-3 text-sm font-bold">Recorrido por stands</h2>
-        <div className="divide-y divide-gray-line">
-          {data.stands.map((s) => (
-            <div key={s.nombre} className="flex items-center justify-between py-2 text-sm">
-              <span>{s.nombre}</span>
-              <span className={s.visitado ? "text-success" : "text-text-faint"}>
-                {s.visitado ? "Completado" : "Pendiente"}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

@@ -113,7 +113,6 @@ as $$
 declare
   v_attendee record;
   v_config record;
-  v_detalle jsonb;
   v_boletos_extra jsonb;
 begin
   select id, nombre, empresa, participa_sorteo into v_attendee
@@ -125,15 +124,6 @@ begin
 
   select registro_abierto, sorteo_abierto, umbral_boletos into v_config
   from public.event_config where id = 1;
-
-  select coalesce(jsonb_agg(jsonb_build_object(
-           'nombre', s.nombre,
-           'visitado', (sv.attendee_id is not null)
-         ) order by s.orden), '[]'::jsonb)
-    into v_detalle
-  from public.stands s
-  left join public.stand_visits sv on sv.stand_id = s.id and sv.attendee_id = v_attendee.id
-  where s.activo and s.tier = 'diamante';
 
   select coalesce(jsonb_agg(tipo), '[]'::jsonb) into v_boletos_extra
   from public.boletos_extra where attendee_id = v_attendee.id;
@@ -147,7 +137,6 @@ begin
     'aptoSorteo', public.es_apto_sorteo(v_attendee.id),
     'participaSorteo', v_attendee.participa_sorteo,
     'sorteoAbierto', v_config.sorteo_abierto,
-    'stands', v_detalle,
     'boletosExtraHechos', v_boletos_extra
   );
 end;
@@ -706,8 +695,7 @@ begin
         email = nullif(trim(p_email), ''),
         celular = nullif(trim(p_celular), ''),
         empresa = nullif(trim(p_empresa), ''),
-        ruc = nullif(trim(p_ruc), ''),
-        asistencia_at = now()
+        ruc = nullif(trim(p_ruc), '')
       where id = trim(p_id);
     exception when unique_violation then
       return jsonb_build_object('success', false, 'mensaje', '⚠️ Ese nombre + correo ya pertenece a otro asistente registrado.');
@@ -717,7 +705,7 @@ begin
       return jsonb_build_object('success', false, 'mensaje', '❌ ID no encontrado para actualizar.');
     end if;
 
-    return jsonb_build_object('success', true, 'id', trim(p_id), 'mensaje', '✅ ¡Datos editados con éxito y asistencia registrada en puerta!');
+    return jsonb_build_object('success', true, 'id', trim(p_id), 'mensaje', '✅ ¡Datos actualizados!');
 
   else
     return jsonb_build_object('success', false, 'mensaje', '⚠️ mode debe ser ''crear'' o ''actualizar''.');
@@ -727,3 +715,46 @@ $$;
 
 revoke execute on function public.registro_manual(text, text, text, text, text, text, text) from public;
 grant execute on function public.registro_manual(text, text, text, text, text, text, text) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- marcar_asistencia_mkt(p_id) — botón aparte de "Editar": marca el
+-- ingreso al evento de alguien que YA estaba en la lista (se registró
+-- antes por el Sheet o fue registrado manual sin marcar asistencia
+-- todavía), y le devuelve los datos para imprimir su etiqueta al
+-- instante. Editar datos ya NO marca asistencia de rebote (antes sí,
+-- era confuso) — son dos botones, dos acciones.
+-- coalesce(asistencia_at, now()) la hace idempotente: tocarlo dos veces
+-- no pisa la hora real del primer ingreso.
+-- ---------------------------------------------------------------------
+create or replace function public.marcar_asistencia_mkt(p_id text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_attendee record;
+begin
+  if not public.es_staff_mkt() then
+    return jsonb_build_object('success', false, 'mensaje', '⛔ Sesión no autorizada o expirada. Vuelve a iniciar sesión en el panel MKT.');
+  end if;
+
+  update public.attendees set asistencia_at = coalesce(asistencia_at, now())
+  where id = trim(p_id)
+  returning nombre, empresa into v_attendee;
+
+  if not found then
+    return jsonb_build_object('success', false, 'mensaje', '❌ ID no encontrado.');
+  end if;
+
+  return jsonb_build_object(
+    'success', true,
+    'id', trim(p_id),
+    'nombre', v_attendee.nombre,
+    'empresa', coalesce(v_attendee.empresa, '---')
+  );
+end;
+$$;
+
+revoke execute on function public.marcar_asistencia_mkt(text) from public;
+grant execute on function public.marcar_asistencia_mkt(text) to authenticated;

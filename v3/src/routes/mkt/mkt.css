@@ -137,7 +137,8 @@
 .person-avatar.checked > svg { position: absolute; right: -2px; bottom: -1px; width: 16px; height: 16px; border-radius: 50%; padding: 3px; background: var(--mkt-success); color: white; border: 2px solid white; }
 .person-main { min-width: 0; } .person-main strong, .person-main span, .person-main small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .person-main strong { font-size: 11px; } .person-main span { color: var(--mkt-gray); font-size: 9px; margin: 2px 0; } .person-main small { color: var(--mkt-gray); font-size: 10px; display: flex; align-items: center; gap: 5px; } .person-main small svg { flex: 0 0 auto; color: var(--mkt-faint); }
 .person-meta { display: none; text-align: center; } .person-meta span, .person-meta strong { display: block; } .person-meta span { color: var(--mkt-faint); font-size: 8px; } .person-meta strong { font-size: 12px; margin-top: 3px; } .person-meta.entered strong { color: var(--mkt-success); font-family: Poppins; font-size: 9px; } .person-meta.pending strong { color: var(--mkt-warning); font-family: Poppins; font-size: 9px; }
-.attendee-card .edit { grid-column: 3; grid-row: 1; }
+.attendee-actions { grid-column: 3; grid-row: 1; display: flex; gap: 6px; }
+.attendee-actions .icon-button:disabled { opacity: .4; }
 .modal-layer { position: fixed; inset: 0; z-index: 60; } .modal-layer .modal-backdrop { z-index: 0; }
 .drawer { position: absolute; z-index: 1; right: 0; top: 0; bottom: 0; width: min(100%, 440px); overflow-y: auto; background: white; padding: 22px; animation: mkt-slide .25s ease; }
 @keyframes mkt-slide { from { transform: translateX(100%); } }
@@ -201,8 +202,8 @@
   .desktop-only { display: initial !important; }
   .mini-progress { display: block; }
   .stand-row { grid-template-columns: 25px 32px 1fr 110px auto auto; }
-  .attendee-card { grid-template-columns: 40px minmax(180px, 1fr) 70px 85px 36px; padding: 14px 17px; }
-  .person-meta { display: block; } .attendee-card .edit { grid-column: auto; grid-row: auto; }
+  .attendee-card { grid-template-columns: 40px minmax(180px, 1fr) 70px 85px 128px; padding: 14px 17px; }
+  .person-meta { display: block; } .attendee-actions { grid-column: auto; grid-row: auto; justify-content: flex-end; }
   .stands-grid { grid-template-columns: repeat(2, 1fr); }
   .ranking-header { display: grid; grid-template-columns: 1fr 1fr 70px; }
   .ranking-row { grid-template-columns: minmax(240px, 1fr) 1fr 70px; padding: 13px 17px; }
@@ -226,5 +227,9 @@
 @media print {
   body * { visibility: hidden; }
   .print-label, .print-label * { visibility: visible; }
-  .print-label { position: absolute; left: 0; top: 0; width: 90mm; height: 29mm; margin: 0; border: 0; }
+  /* Padding reducido solo acá, no en la vista previa en pantalla: con
+     92px de QR + el alto real de la etiqueta (29mm ≈ 110px), no sobra
+     espacio para el padding de 15px que usa la vista previa — 2mm por
+     lado deja margen seguro de impresión sin recortar el QR. */
+  .print-label { position: absolute; left: 0; top: 0; width: 90mm; height: 29mm; margin: 0; border: 0; padding: 2mm 3mm; }
 }
