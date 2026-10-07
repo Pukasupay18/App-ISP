@@ -232,6 +232,16 @@
      con el papel fijado a 29mm x 90mm, el documento completo (ej. los
      231 asistentes de la lista) se paginaba en cientos de hojas diminutas
      y el modal, al ser position:fixed, se repetía en cada una. */
+  /* .mkt-app, .app-shell y .main traen min-height:100vh para la vista
+     normal — eso seguía de pie en impresión e inflaba el documento muy
+     por encima de los 29mm de una página, generando una 2ª página
+     fantasma que repetía la etiqueta (fixed) otra vez. */
+  .mkt-app, .app-shell, .main { min-height: 0 !important; height: auto !important; }
+  /* .topbar (74px fijo) y el padding de .content viven fuera de .screen
+     — son hermanos de nivel superior dentro de .main, así que el
+     selector de abajo no los tocaba y seguían sumando su alto real. */
+  .topbar { display: none !important; }
+  .content { padding: 0 !important; margin: 0 !important; max-width: none !important; }
   .sidebar, .screen > *:not(.modal-layer) { display: none !important; }
   /* Mismo problema dentro del propio modal: el encabezado del drawer, el
      ícono de éxito, el párrafo y los dos botones quedaban invisibles pero
@@ -257,13 +267,19 @@
   .print-label {
     /* La regla de pantalla trae min-height:130px — sin cancelarlo acá,
        gana el más alto de los dos y la caja queda más alta que los 29mm
-       reales, empujando el contenido hacia abajo. */
+       reales, empujando el contenido hacia abajo. 5mm a la izquierda
+       (2mm más que el resto) porque el cabezal de la impresora de
+       etiquetas recorta un margen físico ahí que el navegador no sabe
+       que existe, aunque "Márgenes: Ninguno" esté seleccionado. */
     position: fixed; left: 0; top: 0; width: 90mm; height: 29mm; min-height: 0 !important;
-    margin: 0 !important; border: 0; padding: 2mm 3mm; gap: 3mm; box-sizing: border-box;
+    margin: 0 !important; border: 0; padding: 2mm 3mm 2mm 5mm; gap: 3mm; box-sizing: border-box;
     display: flex !important; align-items: center; overflow: hidden;
   }
-  .print-label svg { width: 76px !important; height: 76px !important; flex-shrink: 0; }
+  .print-label svg { width: 74px !important; height: 74px !important; flex-shrink: 0; }
   .print-label strong { font-size: 12.5px; line-height: 1.15; }
   .print-label span { font-size: 9.5px; margin: 2px 0 3px; }
-  .print-label small { font-size: 8.5px; }
+  /* El ID usaba la fuente mono condensada (JetBrains Mono, -0.04em) —
+     un puntito más grande y en la misma tipografía legible del resto,
+     en vez del monoespaciado difícil de leer de un vistazo. */
+  .print-label small { font-family: "Poppins", sans-serif; font-size: 9.5px; letter-spacing: 0.02em; font-weight: 700; }
 }
