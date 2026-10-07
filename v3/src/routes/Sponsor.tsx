@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { sbPublic } from "../lib/supabaseClient";
 
 type PanelSponsor = {
@@ -7,6 +7,7 @@ type PanelSponsor = {
   visitasHoy: number;
   totalVisitas: number;
   ultimosVisitantes: { nombre: string; empresa: string; nota: string | null; visitedAt: string }[];
+  codigoStand: string | null;
 };
 
 export default function Sponsor() {
@@ -44,6 +45,15 @@ export default function Sponsor() {
   return (
     <div className="mx-auto max-w-[680px] px-4 py-5">
       <h1 className="mb-4 text-lg font-bold">Panel Sponsor — {panel.nombre}</h1>
+
+      {panel.codigoStand && (
+        <Link
+          to={`/stand/${panel.codigoStand}`}
+          className="mb-4 block rounded-[29px] bg-purple py-3 text-center text-sm font-semibold text-white"
+        >
+          Escanear asistentes
+        </Link>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <Kpi label="Visitas hoy" valor={panel.visitasHoy} />

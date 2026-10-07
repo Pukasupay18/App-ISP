@@ -53,6 +53,13 @@ export default function Stands() {
         {stands.map((stand) => {
           const linkStand = `/stand/${stand.codigo}`;
           const linkSponsor = stand.codigo_sponsor ? `/sponsor/${stand.codigo_sponsor}` : null;
+          // Un solo link por stand, no dos — para Diamante es el del
+          // escáner (que ya trae su propio botón "Ver Panel Sponsor" si
+          // lo tiene activo); para Oro/Complementario sin escaneo, el
+          // único link útil es el del panel directamente, si lo tienen.
+          const esDiamante = stand.tier === "diamante";
+          const linkPrincipal = esDiamante || !stand.panel_sponsor || !linkSponsor ? linkStand : linkSponsor;
+          const etiquetaLink = linkPrincipal === linkSponsor ? "Panel sponsor" : "Link del stand";
           return (
             <article className={`stand-card card ${!stand.activo ? "disabled" : ""}`} key={stand.id}>
               <div className="stand-card-head">
@@ -64,17 +71,10 @@ export default function Stands() {
               </div>
               <div className="links">
                 <div>
-                  <span>Link público</span>
-                  <p className="mono">{linkStand}</p>
-                  <button onClick={() => copiar(linkStand)}>{copiado === linkStand ? <Check size={15} /> : <Copy size={15} />}</button>
+                  <span>{etiquetaLink}</span>
+                  <p className="mono">{linkPrincipal}</p>
+                  <button onClick={() => copiar(linkPrincipal)}>{copiado === linkPrincipal ? <Check size={15} /> : <Copy size={15} />}</button>
                 </div>
-                {stand.panel_sponsor && linkSponsor && (
-                  <div>
-                    <span>Panel sponsor</span>
-                    <p className="mono">{linkSponsor}</p>
-                    <button onClick={() => copiar(linkSponsor)}>{copiado === linkSponsor ? <Check size={15} /> : <Copy size={15} />}</button>
-                  </div>
-                )}
               </div>
               <div className="stand-controls">
                 <div>

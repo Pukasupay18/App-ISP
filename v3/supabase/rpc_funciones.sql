@@ -428,7 +428,7 @@ declare
   v_total_visitas int;
   v_ultimos jsonb;
 begin
-  select id, nombre into v_stand
+  select id, nombre, codigo, tier into v_stand
   from public.stands
   where codigo_sponsor = p_codigo_sponsor and panel_sponsor and activo;
 
@@ -465,7 +465,13 @@ begin
     'nombre', v_stand.nombre,
     'visitasHoy', v_visitas_hoy,
     'totalVisitas', v_total_visitas,
-    'ultimosVisitantes', v_ultimos
+    'ultimosVisitantes', v_ultimos,
+    -- Solo se expone si el stand escanea (nivel Diamante) — es lo que
+    -- arma el botón "Escanear asistentes" de vuelta hacia /stand/:codigo,
+    -- para que el panel y el escáner compartan un solo link y el stand
+    -- se mueva entre ambos con un botón, sin que Marketing tenga que
+    -- entregar dos códigos distintos.
+    'codigoStand', case when v_stand.tier = 'diamante' then v_stand.codigo else null end
   );
 end;
 $$;
