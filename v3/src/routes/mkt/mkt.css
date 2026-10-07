@@ -281,5 +281,5 @@
   /* El ID usaba la fuente mono condensada (JetBrains Mono, -0.04em) —
      un puntito más grande y en la misma tipografía legible del resto,
      en vez del monoespaciado difícil de leer de un vistazo. */
-  .print-label small { font-family: "Poppins", sans-serif; font-size: 9.5px; letter-spacing: 0.02em; font-weight: 700; }
+  .print-label small { font-family: "Poppins", sans-serif; font-size: 9.5px; letter-spacing: 0.02em; font-weight: 600; }
 }
