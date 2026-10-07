@@ -225,11 +225,28 @@
 }
 
 @media print {
+  @page { size: 90mm 29mm; margin: 0; }
   body * { visibility: hidden; }
+  /* Ocultar por display:none (no solo visibility) lo que no es la
+     etiqueta: visibility:hidden NO saca el contenido del flujo, así que
+     con el papel fijado a 29mm x 90mm, el documento completo (ej. los
+     231 asistentes de la lista) se paginaba en cientos de hojas diminutas
+     y el modal, al ser position:fixed, se repetía en cada una. */
+  .sidebar, .screen > *:not(.modal-layer) { display: none !important; }
   .print-label, .print-label * { visibility: visible; }
   /* Padding reducido solo acá, no en la vista previa en pantalla: con
-     92px de QR + el alto real de la etiqueta (29mm ≈ 110px), no sobra
-     espacio para el padding de 15px que usa la vista previa — 2mm por
-     lado deja margen seguro de impresión sin recortar el QR. */
-  .print-label { position: absolute; left: 0; top: 0; width: 90mm; height: 29mm; margin: 0; border: 0; padding: 2mm 3mm; }
+     el alto real de la etiqueta (29mm ≈ 110px), no sobra espacio para el
+     padding de 15px que usa la vista previa — 2mm por lado deja margen
+     seguro de impresión. QR y textos también se achican solo para
+     impresión para que, incluso con un nombre largo a dos líneas, el
+     contenido no se desborde ni se corte. */
+  .print-label {
+    position: fixed; left: 0; top: 0; width: 90mm; height: 29mm;
+    margin: 0; border: 0; padding: 2mm 3mm; gap: 3mm;
+    display: flex !important; align-items: center; overflow: hidden;
+  }
+  .print-label svg { width: 76px !important; height: 76px !important; flex-shrink: 0; }
+  .print-label strong { font-size: 12.5px; line-height: 1.15; }
+  .print-label span { font-size: 9.5px; margin: 2px 0 3px; }
+  .print-label small { font-size: 8.5px; }
 }
