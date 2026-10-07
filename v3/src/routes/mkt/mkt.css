@@ -275,8 +275,8 @@
     margin: 0 !important; border: 0; padding: 2mm 3mm 2mm 5mm; gap: 3mm; box-sizing: border-box;
     display: flex !important; align-items: center; overflow: hidden;
   }
-  .print-label svg { width: 74px !important; height: 74px !important; flex-shrink: 0; }
-  .print-label strong { font-size: 12.5px; line-height: 1.15; }
+  .print-label svg { width: 70px !important; height: 70px !important; flex-shrink: 0; }
+  .print-label strong { font-size: 14px; line-height: 1.15; }
   .print-label span { font-size: 9.5px; margin: 2px 0 3px; }
   /* El ID usaba la fuente mono condensada (JetBrains Mono, -0.04em) —
      un puntito más grande y en la misma tipografía legible del resto,
