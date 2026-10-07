@@ -147,7 +147,7 @@ export default function Attendees() {
               <small><Building2 size={13} /> {persona.empresa}</small>
             </div>
             <div className="person-meta">
-              <span>Boletos</span>
+              <span>Puntos</span>
               <strong className="mono">{persona.boletosTotal}</strong>
             </div>
             <div className={`person-meta ${persona.ingresado ? "entered" : "pending"}`}>

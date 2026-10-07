@@ -147,14 +147,14 @@ export default function Pase() {
 
       <div className="mt-4 rounded-content bg-card p-5 text-center shadow">
         <p className="font-mono text-3xl font-bold">{data.boletosTotal}/{data.umbralBoletos}</p>
-        <p className="text-[11px] uppercase tracking-wide text-gray">boletos acumulados</p>
+        <p className="text-[11px] uppercase tracking-wide text-gray">puntos acumulados</p>
         {data.aptoSorteo ? (
           <p className="mt-3 rounded-banner bg-success-tint px-3 py-2 text-sm font-semibold text-success">
             ¡Apto para el sorteo!
           </p>
         ) : (
           <p className="mt-3 rounded-banner bg-gray-line/50 px-3 py-2 text-sm text-gray">
-            Te faltan {Math.max(0, data.umbralBoletos - data.boletosTotal)} boletos para calificar
+            Te faltan {Math.max(0, data.umbralBoletos - data.boletosTotal)} puntos para calificar
           </p>
         )}
       </div>
@@ -175,9 +175,9 @@ export default function Pase() {
       )}
 
       <div className="mt-4 rounded-content bg-card p-5 shadow">
-        <h2 className="text-sm font-bold">Suma boletos</h2>
+        <h2 className="text-sm font-bold">Suma puntos</h2>
         <p className="mt-1 text-xs text-gray">
-          Cada acción suma boletos para el sorteo. Tócala para abrir el link — queda registrada al instante, no hace falta volver aquí a confirmar.
+          Cada acción suma puntos para el sorteo. Tócala para abrir el link — queda registrada al instante, no hace falta volver aquí a confirmar.
         </p>
 
         <div className="mt-3 space-y-2">

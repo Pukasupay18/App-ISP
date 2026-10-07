@@ -54,7 +54,7 @@ export default function Sorteo({ aptos }: { aptos: number }) {
 
   async function exportar() {
     const lista = await cargarCandidatos();
-    const filas = ["Nombre,Empresa,Celular,Boletos", ...lista.map((c) => `${c.nombre},${c.empresa},${c.celular},${c.boletosTotal}`)];
+    const filas = ["Nombre,Empresa,Celular,Puntos", ...lista.map((c) => `${c.nombre},${c.empresa},${c.celular},${c.boletosTotal}`)];
     const url = URL.createObjectURL(new Blob([filas.join("\n")], { type: "text/csv" }));
     const link = document.createElement("a");
     link.href = url;
@@ -77,9 +77,9 @@ export default function Sorteo({ aptos }: { aptos: number }) {
           <p>{rolling ? "Seleccionando ganador..." : ganador ? "Tenemos un ganador" : "Sorteo Fiberlux ISP"}</p>
           <h2 className={rolling ? "rolling" : ""}>{nombreEnPantalla}</h2>
           {ganador ? (
-            <span className="winner-company">{ganador.empresa} · <b className="mono">{ganador.boletosTotal} boletos</b></span>
+            <span className="winner-company">{ganador.empresa} · <b className="mono">{ganador.boletosTotal} puntos</b></span>
           ) : (
-            <span>La selección se realiza al azar entre quienes confirmaron participar y llegan al umbral de boletos.</span>
+            <span>La selección se realiza al azar entre quienes confirmaron participar y llegan al umbral de puntos.</span>
           )}
           <Button onClick={sortear} disabled={rolling || !abierto || cargando}>
             {rolling ? <><RefreshCw className="spin" size={19} /> Sorteando...</> : ganador ? <><RefreshCw size={19} /> Sortear nuevamente</> : <><Sparkles size={19} /> Realizar sorteo</>}
@@ -92,7 +92,7 @@ export default function Sorteo({ aptos }: { aptos: number }) {
             <div>
               <span>Participantes aptos</span>
               <strong className="mono">{aptos}</strong>
-              <small>Llegaron al umbral de boletos</small>
+              <small>Llegaron al umbral de puntos</small>
             </div>
           </article>
           <article className="card draw-control">

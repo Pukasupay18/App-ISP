@@ -40,7 +40,7 @@ export default function Overview({
         <MetricCard label="Registrados" value={metricas.total} note="total inscritos" icon={Users} />
         <MetricCard label="Ingresaron" value={metricas.ingresados} note={`${pct}% de asistencia`} icon={UserCheck} tone="green" />
         <MetricCard label="Visitas a stands" value={totalVisitas} note={`en ${metricas.ranking.length} stands`} icon={Store} tone="blue" />
-        <MetricCard label="Aptos para sorteo" value={metricas.aptos} note={`con ${metricas.umbralBoletos}+ boletos`} icon={Gift} tone="amber" />
+        <MetricCard label="Aptos para sorteo" value={metricas.aptos} note={`con ${metricas.umbralBoletos}+ puntos`} icon={Gift} tone="amber" />
       </div>
 
       <div className="overview-grid">

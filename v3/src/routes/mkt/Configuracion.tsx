@@ -131,8 +131,8 @@ export default function Configuracion() {
           </div>
 
           <label className="wide-label">
-            <span>Umbral de boletos para el sorteo</span>
-            <small>Cantidad mínima de boletos para calificar como apto.</small>
+            <span>Umbral de puntos para el sorteo</span>
+            <small>Cantidad mínima de puntos para calificar como apto.</small>
             <div className="number-input">
               <input
                 type="number"
@@ -140,7 +140,7 @@ export default function Configuracion() {
                 value={config.umbral_boletos}
                 onChange={(e) => setConfig({ ...config, umbral_boletos: Number(e.target.value) })}
               />
-              <span>boletos</span>
+              <span>puntos</span>
             </div>
           </label>
         </div>
