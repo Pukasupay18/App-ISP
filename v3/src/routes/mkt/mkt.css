@@ -233,6 +233,20 @@
      231 asistentes de la lista) se paginaba en cientos de hojas diminutas
      y el modal, al ser position:fixed, se repetía en cada una. */
   .sidebar, .screen > *:not(.modal-layer) { display: none !important; }
+  /* Mismo problema dentro del propio modal: el encabezado del drawer, el
+     ícono de éxito, el párrafo y los dos botones quedaban invisibles pero
+     seguían ocupando su alto real (visibility:hidden no saca del flujo) —
+     esa altura fantasma era la que generaba una 2ª página y corría la
+     etiqueta hacia abajo. Se sacan del flujo con display:none y se
+     colapsa el contenedor a su contenido real (el único que queda:
+     print-label, que de todos modos está position:fixed). */
+  .modal-backdrop, .drawer-head, .label-preview > *:not(.print-label) { display: none !important; }
+  .modal-layer, .drawer, .label-preview {
+    position: static !important; inset: auto !important;
+    width: auto !important; height: auto !important; min-height: 0 !important;
+    padding: 0 !important; margin: 0 !important; overflow: visible !important;
+    animation: none !important;
+  }
   .print-label, .print-label * { visibility: visible; }
   /* Padding reducido solo acá, no en la vista previa en pantalla: con
      el alto real de la etiqueta (29mm ≈ 110px), no sobra espacio para el
@@ -241,8 +255,11 @@
      impresión para que, incluso con un nombre largo a dos líneas, el
      contenido no se desborde ni se corte. */
   .print-label {
-    position: fixed; left: 0; top: 0; width: 90mm; height: 29mm;
-    margin: 0; border: 0; padding: 2mm 3mm; gap: 3mm;
+    /* La regla de pantalla trae min-height:130px — sin cancelarlo acá,
+       gana el más alto de los dos y la caja queda más alta que los 29mm
+       reales, empujando el contenido hacia abajo. */
+    position: fixed; left: 0; top: 0; width: 90mm; height: 29mm; min-height: 0 !important;
+    margin: 0 !important; border: 0; padding: 2mm 3mm; gap: 3mm; box-sizing: border-box;
     display: flex !important; align-items: center; overflow: hidden;
   }
   .print-label svg { width: 76px !important; height: 76px !important; flex-shrink: 0; }
