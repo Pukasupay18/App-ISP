@@ -53,7 +53,7 @@ export function Sidebar({
 
   async function abrirApoyoStand() {
     if (!stands) {
-      const { data } = await sbMkt.from("stands").select("nombre, codigo").eq("activo", true).order("orden");
+      const { data } = await sbMkt.from("stands").select("nombre, codigo").eq("activo", true).eq("tier", "diamante").order("orden");
       setStands((data as StandAtajo[]) ?? []);
     }
     setMenu("stands");
