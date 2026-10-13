@@ -18,9 +18,26 @@ export default function Stands() {
 
   useEffect(() => { cargar(); }, []);
 
+  // codigo_sponsor es una columna nullable que solo se llena a mano en
+  // el seed — un stand agregado después, o cuya fila nunca trajo ese
+  // valor, puede terminar con panel_sponsor=true pero codigo_sponsor
+  // vacío: el toggle se ve prendido pero resolver_stand/obtener_panel_sponsor
+  // nunca exponen un link funcional (a propósito, por seguridad). Se
+  // autogenera acá mismo, una sola vez, si hace falta.
+  function generarCodigoSponsor(nombre: string): string {
+    const slug = nombre.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "").slice(0, 8);
+    const sufijo = Math.random().toString(36).slice(2, 6);
+    return `spn-${slug}-${sufijo}`;
+  }
+
   async function actualizar(id: string, campo: "panel_sponsor" | "activo", valor: boolean) {
-    setStands((prev) => prev.map((s) => (s.id === id ? { ...s, [campo]: valor } : s)));
-    const { error } = await sbMkt.from("stands").update({ [campo]: valor }).eq("id", id);
+    const stand = stands.find((s) => s.id === id);
+    const payload: Partial<StandRow> = { [campo]: valor };
+    if (campo === "panel_sponsor" && valor && stand && !stand.codigo_sponsor) {
+      payload.codigo_sponsor = generarCodigoSponsor(stand.nombre);
+    }
+    setStands((prev) => prev.map((s) => (s.id === id ? { ...s, ...payload } : s)));
+    const { error } = await sbMkt.from("stands").update(payload).eq("id", id);
     if (error) cargar(); // revierte el optimismo si falló
   }
 
