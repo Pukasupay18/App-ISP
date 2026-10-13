@@ -59,9 +59,14 @@ export default function Attendees() {
     try { localStorage.setItem("mkt-auto-print", String(next)); } catch { /* noop */ }
   }
 
+  // normalize('NFD') separa cada letra de su tilde (á → a + ´) y el
+  // regex se queda solo con la letra — así "Nuñez"/"Nunez" o
+  // "José"/"Jose" dan el mismo resultado al buscar.
+  const sinTildes = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+
   const filtrados = useMemo(() => {
-    const q = query.toLowerCase();
-    return asistentes.filter((a) => `${a.nombre} ${a.email} ${a.empresa}`.toLowerCase().includes(q));
+    const q = sinTildes(query.toLowerCase());
+    return asistentes.filter((a) => sinTildes(`${a.nombre} ${a.email} ${a.empresa}`.toLowerCase()).includes(q));
   }, [asistentes, query]);
 
   async function guardar(e: FormEvent<HTMLFormElement>) {
