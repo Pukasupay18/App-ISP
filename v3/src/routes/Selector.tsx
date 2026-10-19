@@ -97,10 +97,15 @@ export default function Selector() {
             <Link to="/certificado" className="mt-4 block text-center text-xs font-semibold text-purple underline">
               ¿Ya asististe? Descarga tu certificado
             </Link>
-            <EncuestaCTA variante="link" />
           </>
         )}
       </div>
+
+      {!escaneando && (
+        <div className="mt-3 w-full rounded-content bg-card p-4 text-center shadow">
+          <EncuestaCTA variante="link" />
+        </div>
+      )}
     </div>
   );
 }
