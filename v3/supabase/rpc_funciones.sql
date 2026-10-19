@@ -115,7 +115,7 @@ declare
   v_config record;
   v_boletos_extra jsonb;
 begin
-  select id, nombre, empresa, participa_sorteo into v_attendee
+  select id, nombre, empresa, participa_sorteo, asistencia_at into v_attendee
   from public.attendees where id = upper(trim(p_id));
 
   if not found then
@@ -137,12 +137,65 @@ begin
     'aptoSorteo', public.es_apto_sorteo(v_attendee.id),
     'participaSorteo', v_attendee.participa_sorteo,
     'sorteoAbierto', v_config.sorteo_abierto,
-    'boletosExtraHechos', v_boletos_extra
+    'boletosExtraHechos', v_boletos_extra,
+    -- Condición del certificado de participación: solo quien ya hizo
+    -- check-in en puerta (asistencia_at marcada) puede descargarlo — ver
+    -- buscar_certificado() más abajo, misma regla en los dos lugares.
+    'asistio', v_attendee.asistencia_at is not null
   );
 end;
 $$;
 
 grant execute on function public.obtener_pase(text) to anon, authenticated;
+
+-- ---------------------------------------------------------------------
+-- buscar_certificado(...) — búsqueda pública para la descarga del
+-- certificado de participación sin pasar por /pase/:id: cubre a quien no
+-- tiene a mano su gafete (lo perdió, nunca se imprimió, vino sin
+-- celular). Acepta cualquier combinación de id de gafete / celular /
+-- correo / RUC — basta con que uno coincida. Devuelve SOLO el nombre, y
+-- SOLO de quien ya tiene asistencia_at marcada: si no hizo check-in en
+-- el evento, no hay certificado que descargar aunque los demás datos
+-- matcheen. Puede devolver más de un resultado (ej. un celular
+-- compartido entre varias inscripciones) — el cliente genera un
+-- certificado por cada nombre devuelto.
+-- ---------------------------------------------------------------------
+create or replace function public.buscar_certificado(
+  p_id      text default null,
+  p_celular text default null,
+  p_email   text default null,
+  p_ruc     text default null
+)
+returns jsonb
+language plpgsql
+security definer
+stable
+set search_path = public
+as $$
+declare
+  v_resultado jsonb;
+begin
+  if coalesce(trim(p_id), '') = '' and coalesce(trim(p_celular), '') = ''
+     and coalesce(trim(p_email), '') = '' and coalesce(trim(p_ruc), '') = '' then
+    return '[]'::jsonb;
+  end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object('nombre', nombre)), '[]'::jsonb)
+  into v_resultado
+  from public.attendees
+  where asistencia_at is not null
+    and (
+      (coalesce(trim(p_id), '') <> '' and id = upper(trim(p_id)))
+      or (coalesce(trim(p_celular), '') <> '' and celular is not null and trim(celular) = trim(p_celular))
+      or (coalesce(trim(p_email), '') <> '' and email is not null and lower(trim(email)) = lower(trim(p_email)))
+      or (coalesce(trim(p_ruc), '') <> '' and ruc is not null and trim(ruc) = trim(p_ruc))
+    );
+
+  return v_resultado;
+end;
+$$;
+
+grant execute on function public.buscar_certificado(text, text, text, text) to anon, authenticated;
 
 -- ---------------------------------------------------------------------
 -- participar_sorteo(p_id) — opt-in del asistente, solo mientras Marketing

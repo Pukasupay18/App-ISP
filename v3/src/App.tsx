@@ -6,6 +6,7 @@ import Pase from "./routes/Pase";
 import Stand from "./routes/Stand";
 import Sponsor from "./routes/Sponsor";
 import Mkt from "./routes/Mkt";
+import Certificado from "./routes/Certificado";
 
 export default function App() {
   // Forzar un refresh de sesión al volver a primer plano: los navegadores
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="/pase/:codigo" element={<Pase />} />
         <Route path="/stand/:codigo" element={<Stand />} />
         <Route path="/sponsor/:codigo" element={<Sponsor />} />
+        <Route path="/certificado" element={<Certificado />} />
         <Route path="/mkt" element={<Mkt />} />
         <Route path="*" element={<Selector />} />
       </Routes>

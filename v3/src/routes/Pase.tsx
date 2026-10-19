@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
-import { Clock, Facebook, Instagram, Linkedin, Megaphone, Music2, Star } from "lucide-react";
+import { Award, Clock, Facebook, Instagram, Linkedin, Megaphone, Music2, Star } from "lucide-react";
 import { sbPublic } from "../lib/supabaseClient";
+import Modal from "../components/Modal";
+import CertificadoDescarga from "../components/CertificadoDescarga";
 
 type ItemCronograma = { hora: string; actividad: string; expositor: string | null };
 
@@ -14,6 +16,7 @@ type PaseData = {
   participaSorteo: boolean;
   sorteoAbierto: boolean;
   boletosExtraHechos: string[];
+  asistio: boolean;
 };
 
 // Pesos de cada acción — deben coincidir EXACTO con total_boletos() en
@@ -61,6 +64,7 @@ export default function Pase() {
   const [minutoActual, setMinutoActual] = useState(() => minutosLima());
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
+  const [mostrarCertificado, setMostrarCertificado] = useState(false);
 
   const cargarPase = useCallback(async () => {
     if (!codigo) return;
@@ -137,6 +141,15 @@ export default function Pase() {
         <h1 className="mt-1 text-xl font-bold">{data.nombre}</h1>
         <p className="text-sm text-white/80">{data.empresa}</p>
       </div>
+
+      {data.asistio && (
+        <button
+          onClick={() => setMostrarCertificado(true)}
+          className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-[29px] bg-gradient-to-br from-purple to-purple-dark text-sm font-semibold text-white shadow"
+        >
+          <Award size={18} /> Descargar certificado de participación
+        </button>
+      )}
 
       {aptosEnVivo !== null && (
         <div className="mt-4 rounded-banner bg-purple/10 px-4 py-3 text-sm font-semibold text-purple">
@@ -231,6 +244,12 @@ export default function Pase() {
             })}
           </div>
         </div>
+      )}
+
+      {mostrarCertificado && (
+        <Modal titulo="Descarga tu certificado" onClose={() => setMostrarCertificado(false)}>
+          <CertificadoDescarga nombre={data.nombre} />
+        </Modal>
       )}
     </div>
   );

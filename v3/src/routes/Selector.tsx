@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
 import { Camera, X } from "lucide-react";
+import { extraerCodigoPase } from "../lib/qr";
 
 // Entrada pública para quien no tiene a mano el QR de su gafete (lo
 // escanean normalmente con la cámara nativa del teléfono y el QR los
@@ -12,11 +13,6 @@ import { Camera, X } from "lucide-react";
 // del evento en vez de escanear directo) — mismo lector que usan los
 // stands (Stand.tsx), aceptando tanto el link completo como el código
 // plano del QR.
-function extraerCodigo(textoEscaneado: string): string {
-  const limpio = textoEscaneado.trim();
-  const match = limpio.match(/\/pase\/([A-Za-z0-9]+)/);
-  return (match ? match[1] : limpio).toUpperCase();
-}
 
 export default function Selector() {
   const [codigo, setCodigo] = useState("");
@@ -33,7 +29,7 @@ export default function Selector() {
   }
 
   const alEscanear = useCallback((texto: string) => {
-    navigate(`/pase/${extraerCodigo(texto)}`);
+    navigate(`/pase/${extraerCodigoPase(texto)}`);
   }, [navigate]);
 
   useEffect(() => {
@@ -96,6 +92,10 @@ export default function Selector() {
                 Ver mi pase
               </button>
             </form>
+
+            <Link to="/certificado" className="mt-4 block text-center text-xs font-semibold text-purple underline">
+              ¿Ya asististe? Descarga tu certificado
+            </Link>
           </>
         )}
       </div>
