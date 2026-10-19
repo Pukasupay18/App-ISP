@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { generarCertificadoPNG, nombreArchivoCertificado } from "../lib/certificado";
+import EncuestaCTA from "./EncuestaCTA";
 
 // Genera y muestra UN certificado (preview + link de descarga) para el
 // nombre recibido. Se usa tanto en /pase (ya sabemos quién es) como en
@@ -41,6 +42,7 @@ export default function CertificadoDescarga({ nombre }: { nombre: string }) {
           >
             Descargar certificado
           </a>
+          <EncuestaCTA />
         </>
       ) : (
         <p className="py-6 text-center text-xs text-gray">Generando tu constancia…</p>

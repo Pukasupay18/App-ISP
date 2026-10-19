@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
 import { Camera, X } from "lucide-react";
 import { extraerCodigoPase } from "../lib/qr";
+import EncuestaCTA from "../components/EncuestaCTA";
 
 // Entrada pública para quien no tiene a mano el QR de su gafete (lo
 // escanean normalmente con la cámara nativa del teléfono y el QR los
@@ -96,6 +97,7 @@ export default function Selector() {
             <Link to="/certificado" className="mt-4 block text-center text-xs font-semibold text-purple underline">
               ¿Ya asististe? Descarga tu certificado
             </Link>
+            <EncuestaCTA variante="link" />
           </>
         )}
       </div>
