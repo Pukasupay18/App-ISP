@@ -152,13 +152,18 @@ grant execute on function public.obtener_pase(text) to anon, authenticated;
 -- buscar_certificado(...) — búsqueda pública para la descarga del
 -- certificado de participación sin pasar por /pase/:id: cubre a quien no
 -- tiene a mano su gafete (lo perdió, nunca se imprimió, vino sin
--- celular). Acepta cualquier combinación de id de gafete / celular /
--- correo / RUC — basta con que uno coincida. Devuelve SOLO el nombre, y
--- SOLO de quien ya tiene asistencia_at marcada: si no hizo check-in en
--- el evento, no hay certificado que descargar aunque los demás datos
--- matcheen. Puede devolver más de un resultado (ej. un celular
--- compartido entre varias inscripciones) — el cliente genera un
--- certificado por cada nombre devuelto.
+-- celular). Devuelve SOLO el nombre, y SOLO de quien ya tiene
+-- asistencia_at marcada: si no hizo check-in en el evento, no hay
+-- certificado que descargar aunque los demás datos matcheen.
+--
+-- El RUC es DISTINTO a los demás campos: identifica una EMPRESA, no a
+-- una persona — varias inscripciones de un mismo evento suelen compartir
+-- RUC (todos los asistentes de ese stand/empresa), y el RUC de una
+-- empresa es información pública. Por eso el RUC nunca busca solo:
+-- hace falta además el celular o el correo (algo que solo sabe la
+-- propia persona) para que la combinación tenga efecto — si llega solo,
+-- la función devuelve vacío sin tocar la tabla. El id de gafete, el
+-- celular y el correo sí identifican a la persona por sí solos.
 -- ---------------------------------------------------------------------
 create or replace function public.buscar_certificado(
   p_id      text default null,
@@ -174,9 +179,18 @@ set search_path = public
 as $$
 declare
   v_resultado jsonb;
+  v_id      text := nullif(upper(trim(p_id)), '');
+  v_celular text := nullif(trim(p_celular), '');
+  v_email   text := nullif(lower(trim(p_email)), '');
+  v_ruc     text := nullif(trim(p_ruc), '');
 begin
-  if coalesce(trim(p_id), '') = '' and coalesce(trim(p_celular), '') = ''
-     and coalesce(trim(p_email), '') = '' and coalesce(trim(p_ruc), '') = '' then
+  if v_id is null and v_celular is null and v_email is null and v_ruc is null then
+    return '[]'::jsonb;
+  end if;
+
+  -- RUC sin celular ni correo que lo acompañe: no es suficiente, no se
+  -- ejecuta ninguna búsqueda por RUC (ver comentario arriba).
+  if v_ruc is not null and v_celular is null and v_email is null then
     return '[]'::jsonb;
   end if;
 
@@ -185,10 +199,16 @@ begin
   from public.attendees
   where asistencia_at is not null
     and (
-      (coalesce(trim(p_id), '') <> '' and id = upper(trim(p_id)))
-      or (coalesce(trim(p_celular), '') <> '' and celular is not null and trim(celular) = trim(p_celular))
-      or (coalesce(trim(p_email), '') <> '' and email is not null and lower(trim(email)) = lower(trim(p_email)))
-      or (coalesce(trim(p_ruc), '') <> '' and ruc is not null and trim(ruc) = trim(p_ruc))
+      (v_id is not null and id = v_id)
+      or (
+        v_ruc is not null and ruc is not null and trim(ruc) = v_ruc
+        and (
+          (v_celular is not null and celular is not null and trim(celular) = v_celular)
+          or (v_email is not null and email is not null and lower(trim(email)) = v_email)
+        )
+      )
+      or (v_ruc is null and v_celular is not null and celular is not null and trim(celular) = v_celular)
+      or (v_ruc is null and v_email is not null and email is not null and lower(trim(email)) = v_email)
     );
 
   return v_resultado;

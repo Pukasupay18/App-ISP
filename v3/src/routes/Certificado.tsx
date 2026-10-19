@@ -88,11 +88,24 @@ export default function Certificado() {
 
   function enviarDatos(e: React.FormEvent) {
     e.preventDefault();
-    if (!ruc.trim() && !celular.trim() && !email.trim()) {
+    const rucVal = ruc.trim();
+    const celularVal = celular.trim();
+    const emailVal = email.trim();
+
+    if (!rucVal && !celularVal && !emailVal) {
       setError("Completa al menos el RUC, el celular o el correo.");
       return;
     }
-    buscar({ p_ruc: ruc.trim(), p_celular: celular.trim(), p_email: email.trim() });
+    // El RUC identifica una empresa, no a una persona — varios asistentes
+    // de la misma empresa lo comparten. Por seguridad, el servidor no
+    // busca por RUC solo: tiene que venir acompañado de tu celular o tu
+    // correo. Se valida acá también para no hacerle esperar un viaje al
+    // servidor solo para decirle lo mismo.
+    if (rucVal && !celularVal && !emailVal) {
+      setError("El RUC solo funciona junto con tu celular o tu correo — agrega uno de los dos.");
+      return;
+    }
+    buscar({ p_ruc: rucVal, p_celular: celularVal, p_email: emailVal });
   }
 
   function reiniciar() {
@@ -181,6 +194,7 @@ export default function Certificado() {
                       placeholder="20123456789"
                       className="w-full rounded-input border border-gray-line px-4 py-3 text-sm"
                     />
+                    <p className="mt-1 text-[11px] text-gray">Solo funciona junto con tu celular o tu correo.</p>
                   </div>
                   <div className="text-left">
                     <label className="mb-1 block text-xs font-medium text-gray">Celular</label>
